@@ -9,11 +9,11 @@
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <meta property="og:title" content="The Map — Love and Let Live">
 <meta property="og:description" content="Find where you're standing. Seventeen entry points, and a road between each of them.">
-<meta property="og:image" content="https://loveandletlive.com/assets/cover-art.jpg">
+<meta property="og:image" content="https://loveandletlive.com/assets/social-card.jpg">
 <meta property="og:url" content="https://loveandletlive.com/map.html">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://loveandletlive.com/assets/cover-art.jpg">
+<meta name="twitter:image" content="https://loveandletlive.com/assets/social-card.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
@@ -27,14 +27,20 @@
     --line:rgba(240,185,77,0.18);
   }
   *{box-sizing:border-box;margin:0;padding:0;}
-  html,body{height:100%;overflow:hidden;}
+  /* dvh, not vh: on iOS Safari 100vh is the height with the toolbar hidden, so
+     a vh-sized canvas puts the near edge of the world behind the toolbar. */
+  html,body{height:100vh;height:100dvh;overflow:hidden;}
   body{
     background:var(--bg);color:var(--text);
     font-family:'Inter',sans-serif;font-weight:300;
     -webkit-font-smoothing:antialiased;
+    overscroll-behavior:none;
   }
   .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);}
-  canvas{display:block;position:fixed;inset:0;width:100%;height:100%;touch-action:none;}
+  canvas{
+    display:block;position:fixed;top:0;left:0;
+    width:100%;height:100vh;height:100dvh;touch-action:none;
+  }
 
   /* ---------- top bar ---------- */
   .topbar{
@@ -58,9 +64,10 @@
 
   /* ================= THRESHOLD ================= */
   .threshold{
-    position:fixed;inset:0;z-index:25;
+    position:fixed;top:0;left:0;right:0;
+    height:100vh;height:100dvh;z-index:25;
     display:flex;flex-direction:column;align-items:center;
-    padding-top:20vh;
+    padding-top:20vh;padding-top:20dvh;
     transition:opacity .7s ease;
     pointer-events:none;
   }
@@ -92,6 +99,8 @@
   .picker-scroll{
     height:100%;overflow-y:scroll;scroll-snap-type:y mandatory;
     scrollbar-width:none;
+    touch-action:pan-y;overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;
   }
   .picker-scroll::-webkit-scrollbar{display:none;}
   .pad{height:calc((var(--ph) - 44px)/2);}
@@ -484,15 +493,28 @@ ROADS.forEach(([a,b,thread])=>{
   (roadsOf[b] ||= []).push({to:a,thread});
 });
 
+/* Draw budget. A phone redrawing the full mesh every frame drops below 60fps,
+   and the difference is invisible at that size — so thin it out. */
+let Q={rings:15,ringSeg:84,spokes:52,spokeSeg:20,roadSeg:26,starDiv:5200,shadowPasses:2};
+function setQuality(){
+  const small = W < 760 || (navigator.hardwareConcurrency||8) <= 4;
+  Q = small
+    ? {rings:10,ringSeg:54,spokes:30,spokeSeg:13,roadSeg:16,starDiv:9000,shadowPasses:1}
+    : {rings:15,ringSeg:84,spokes:52,spokeSeg:20,roadSeg:26,starDiv:5200,shadowPasses:2};
+}
 function resize(){
   DPR=Math.min(devicePixelRatio||1,2);
   W=cv.clientWidth; H=cv.clientHeight;
   cv.width=Math.round(W*DPR); cv.height=Math.round(H*DPR);
   ctx.setTransform(DPR,0,0,DPR,0,0);
   base=Math.min(H,W*1.05);
+  setQuality();
   buildStars();
 }
 addEventListener('resize',resize);
+addEventListener('orientationchange',()=>setTimeout(resize,120));
+// iOS fires this when the toolbar slides away and the visible height changes
+if(window.visualViewport) visualViewport.addEventListener('resize',resize);
 
 function ease(t){ return t<0.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2; }
 
@@ -560,7 +582,7 @@ function frontRotationFor(n){ return n.angle*Math.PI/180 - Math.PI; }
 let stars=[];
 function buildStars(){
   stars=[];
-  const count=Math.round((W*H)/5200);
+  const count=Math.round((W*H)/Q.starDiv);
   for(let i=0;i<count;i++)
     stars.push({x:Math.random(),y:Math.random(),r:Math.random()*1.25+0.25,
                 a:Math.random()*0.55+0.12,tw:Math.random()*6.28,sp:Math.random()*0.9+0.25});
@@ -585,7 +607,7 @@ function drawStars(time){
 
 /* ---------------- ground ---------------- */
 function drawGround(time){
-  const RINGS=15,SEG=84,RMAX=6.2;
+  const RINGS=Q.rings,SEG=Q.ringSeg,RMAX=6.2;
   ctx.lineWidth=1;
   for(let i=1;i<=RINGS;i++){
     const r=(i/RINGS)*RMAX;
@@ -599,11 +621,11 @@ function drawGround(time){
     ctx.strokeStyle=`rgba(240,185,77,${0.40*(1-i/(RINGS+5))})`;
     ctx.stroke();
   }
-  for(let k=0;k<52;k++){
-    const a=(k/52)*Math.PI*2;
+  for(let k=0;k<Q.spokes;k++){
+    const a=(k/Q.spokes)*Math.PI*2;
     ctx.beginPath(); let st=false;
-    for(let j=0;j<=20;j++){
-      const r=(j/20)*RMAX;
+    for(let j=0;j<=Q.spokeSeg;j++){
+      const r=(j/Q.spokeSeg)*RMAX;
       const p=project(Math.sin(a)*r,0,Math.cos(a)*r);
       if(!p){st=false;continue}
       if(!st){ctx.moveTo(p.x,p.y);st=true} else ctx.lineTo(p.x,p.y);
@@ -625,7 +647,7 @@ function drawGround(time){
 
 /* ---------------- roads ---------------- */
 function roadPoints(a,b,lift){
-  const pa=nodePos(a),pb=nodePos(b),pts=[],N=26;
+  const pa=nodePos(a),pb=nodePos(b),pts=[],N=Q.roadSeg;
   for(let i=0;i<=N;i++){
     const t=i/N;
     const x=pa.x+(pb.x-pa.x)*t, z=pa.z+(pb.z-pa.z)*t;
@@ -785,8 +807,7 @@ function drawNodes(time){
       ctx.save();
       ctx.shadowColor='rgba(2,4,10,0.95)'; ctx.shadowBlur=9;
       ctx.fillStyle=isSel?'#fff6e0':(isHov?'#ffd88a':'rgba(240,243,250,0.94)');
-      ctx.fillText(n.label,p.x,ly);
-      ctx.fillText(n.label,p.x,ly);
+      for(let k=0;k<Q.shadowPasses;k++) ctx.fillText(n.label,p.x,ly);
       ctx.restore();
       if(n.core && !dim && inMap){
         const fs2=Math.max(8,fs*0.40);
