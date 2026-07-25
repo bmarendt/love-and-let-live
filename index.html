@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Love and Let Live — A Podcast</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#060912;
+    --panel:#0d1324;
+    --panel-2:#101830;
+    --gold:#f0b94d;
+    --gold-soft:#f7d998;
+    --text:#eef0f5;
+    --text-dim:#93a0bd;
+    --border:rgba(240,185,77,0.18);
+    --max:1100px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    font-weight:300;
+    line-height:1.6;
+  }
+  h1,h2,h3,.serif{
+    font-family:'Cormorant Garamond',serif;
+    font-weight:500;
+    letter-spacing:0.01em;
+  }
+  a{color:inherit;text-decoration:none;}
+  .wrap{max-width:var(--max);margin:0 auto;padding:0 28px;}
+  .eyebrow{
+    font-size:12px;
+    letter-spacing:0.28em;
+    text-transform:uppercase;
+    color:var(--gold);
+    font-weight:500;
+  }
+
+  /* NAV */
+  nav{
+    position:sticky;top:0;z-index:50;
+    background:rgba(6,9,18,0.85);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--border);
+  }
+  nav .wrap{
+    display:flex;align-items:center;justify-content:space-between;
+    height:68px;
+  }
+  .logo{
+    font-family:'Cormorant Garamond',serif;
+    font-size:19px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--text);
+  }
+  .logo span{color:var(--gold);}
+  .navlinks{display:flex;gap:34px;font-size:13px;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-dim);}
+  .navlinks a:hover{color:var(--gold-soft);}
+  @media (max-width:640px){.navlinks{display:none;}}
+
+  /* HERO */
+  .hero{
+    position:relative;
+    min-height:92vh;
+    display:flex;
+    align-items:flex-end;
+    background-image:
+      linear-gradient(180deg, rgba(6,9,18,0.35) 0%, rgba(6,9,18,0.55) 45%, rgba(6,9,18,0.97) 92%),
+      url('assets/cover-art.jpg');
+    background-size:cover;
+    background-position:center;
+  }
+  .hero-inner{
+    width:100%;
+    padding-bottom:70px;
+    text-align:center;
+  }
+  .hero .eyebrow{display:block;margin-bottom:18px;}
+  .hero h1{
+    font-size:clamp(48px,8vw,92px);
+    line-height:1.02;
+    color:var(--text);
+    margin-bottom:22px;
+  }
+  .hero h1 em{font-style:italic;color:var(--gold-soft);}
+  .tagline{
+    max-width:620px;
+    margin:0 auto 40px;
+    color:var(--text-dim);
+    font-size:17px;
+    font-weight:300;
+  }
+  .btn-row{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;}
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:14px 28px;
+    font-size:13px;letter-spacing:0.08em;text-transform:uppercase;
+    border-radius:2px;
+    transition:all .2s ease;
+  }
+  .btn-primary{
+    background:var(--gold);
+    color:#12101a;
+    font-weight:600;
+  }
+  .btn-primary:hover{background:var(--gold-soft);}
+  .btn-outline{
+    border:1px solid rgba(238,240,245,0.3);
+    color:var(--text);
+  }
+  .btn-outline:hover{border-color:var(--gold);color:var(--gold-soft);}
+
+  /* SECTION SHELL */
+  section{padding:110px 0;}
+  .section-head{text-align:center;max-width:640px;margin:0 auto 60px;}
+  .section-head h2{font-size:clamp(30px,4vw,44px);margin-top:14px;}
+  .section-head p{color:var(--text-dim);margin-top:18px;font-size:16px;}
+
+  /* START HERE */
+  .starthere{
+    background:var(--panel);
+    border-top:1px solid var(--border);
+    border-bottom:1px solid var(--border);
+  }
+  .sh-grid{
+    display:grid;
+    grid-template-columns:0.9fr 1.1fr;
+    gap:56px;
+    align-items:center;
+  }
+  @media (max-width:800px){.sh-grid{grid-template-columns:1fr;}}
+  .sh-card{
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:44px;
+  }
+  .sh-card .eyebrow{margin-bottom:14px;}
+  .sh-card h3{font-size:30px;margin-bottom:20px;}
+  .quote{
+    font-family:'Cormorant Garamond',serif;
+    font-style:italic;
+    font-size:22px;
+    line-height:1.5;
+    color:var(--gold-soft);
+    border-left:2px solid var(--gold);
+    padding-left:22px;
+    margin:26px 0;
+  }
+  .sh-play{
+    display:flex;align-items:center;gap:16px;
+    padding:22px 26px;
+    background:rgba(240,185,77,0.07);
+    border:1px solid var(--border);
+    border-radius:6px;
+  }
+  .play-circle{
+    flex:0 0 auto;
+    width:52px;height:52px;border-radius:50%;
+    background:var(--gold);
+    display:flex;align-items:center;justify-content:center;
+    color:#12101a;font-size:18px;
+  }
+  .sh-play .meta{flex:1;}
+  .sh-play .meta strong{display:block;font-size:15px;color:var(--text);font-weight:500;}
+  .sh-play .meta span{font-size:13px;color:var(--text-dim);}
+
+  /* EPISODES */
+  .ep-list{display:flex;flex-direction:column;gap:2px;}
+  .ep{
+    display:grid;
+    grid-template-columns:70px 1fr auto;
+    gap:24px;
+    align-items:center;
+    padding:26px 30px;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:6px;
+    margin-bottom:12px;
+  }
+  .ep.live{border-color:rgba(240,185,77,0.4);}
+  @media (max-width:640px){.ep{grid-template-columns:50px 1fr;}.ep .ep-status{grid-column:1/-1;justify-self:start;margin-top:10px;}}
+  .ep-num{font-family:'Cormorant Garamond',serif;font-size:34px;color:var(--gold);opacity:0.7;}
+  .ep-title{font-size:18px;color:var(--text);margin-bottom:6px;font-weight:400;}
+  .ep-desc{font-size:14px;color:var(--text-dim);}
+  .ep-status{
+    font-size:11px;letter-spacing:0.1em;text-transform:uppercase;
+    padding:6px 14px;border-radius:20px;white-space:nowrap;
+  }
+  .status-live{background:rgba(240,185,77,0.15);color:var(--gold-soft);border:1px solid var(--border);}
+  .status-soon{background:rgba(147,160,189,0.08);color:var(--text-dim);border:1px solid rgba(147,160,189,0.15);}
+
+  /* ABOUT */
+  .about{
+    background:var(--panel);
+    border-top:1px solid var(--border);
+  }
+  .about-inner{max-width:720px;margin:0 auto;text-align:center;}
+  .about-inner p{color:var(--text-dim);font-size:17px;margin-bottom:22px;}
+  .about-inner strong{color:var(--text);font-weight:500;}
+
+  /* FOOTER */
+  footer{padding:60px 0 40px;border-top:1px solid var(--border);}
+  .foot-inner{display:flex;flex-direction:column;align-items:center;gap:22px;text-align:center;}
+  .foot-links{display:flex;gap:26px;flex-wrap:wrap;justify-content:center;font-size:13px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.06em;}
+  .foot-links a:hover{color:var(--gold-soft);}
+  .foot-support{font-size:12px;color:rgba(147,160,189,0.55);}
+  .foot-support a{border-bottom:1px dotted rgba(147,160,189,0.4);}
+  .foot-copy{font-size:12px;color:rgba(147,160,189,0.4);}
+  .mock-note{
+    text-align:center;font-size:11px;color:rgba(147,160,189,0.35);
+    letter-spacing:0.05em;margin-top:10px;
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="logo">Love <span>&amp;</span> Let Live</div>
+    <div class="navlinks">
+      <a href="#starthere">Start Here</a>
+      <a href="#episodes">Episodes</a>
+      <a href="#about">About</a>
+      <a href="#support">Support</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap hero-inner">
+    <span class="eyebrow">A Podcast</span>
+    <h1>Love <em>and</em> Let Live</h1>
+    <p class="tagline">A podcast dedicated to exploring the universal message of love across the world's spiritual traditions. There's more that brings us together than divides us.</p>
+    <div class="btn-row">
+      <a href="#starthere" class="btn btn-primary">▶ Start Here</a>
+      <a href="#" class="btn btn-outline">Listen on Apple Podcasts</a>
+      <a href="#" class="btn btn-outline">Listen on Spotify</a>
+    </div>
+  </div>
+</header>
+
+<section class="starthere" id="starthere">
+  <div class="wrap">
+    <div class="sh-grid">
+      <div class="sh-card">
+        <span class="eyebrow">A Map, Not a Destination</span>
+        <h3>The Opening Credo</h3>
+        <p style="color:var(--text-dim);font-size:15px;">Every episode that follows builds from this one. It isn't the show's conclusion — it's a marker that says "I am here," recorded honestly on the day it was written, so that everything found afterward can be measured against it.</p>
+        <div class="quote">"No man knows the truth, and no man will, this side of death. Not this host. Not any tradition examined on this show."</div>
+      </div>
+      <div>
+        <div class="sh-play">
+          <div class="play-circle">▶</div>
+          <div class="meta">
+            <strong>Start Here — The Opening Credo</strong>
+            <span>Where I Stand Today · Episode 1</span>
+          </div>
+        </div>
+        <p style="margin-top:24px;color:var(--text-dim);font-size:15px;">If you're new to the show, this is the only place to begin. Everything else — every conversation, every tradition explored, every hard question asked — gets measured against what's said here first.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="episodes">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">The Journey So Far</span>
+      <h2>Episodes</h2>
+      <p>The show begins with the credo, then follows the road that led here — before moving into the wider conversation.</p>
+    </div>
+    <div class="ep-list">
+      <div class="ep live">
+        <div class="ep-num">01</div>
+        <div>
+          <div class="ep-title">Start Here — The Opening Credo</div>
+          <div class="ep-desc">Where I stand today, and the map by which everything after this will be measured.</div>
+        </div>
+        <div class="ep-status status-live">Available</div>
+      </div>
+      <div class="ep">
+        <div class="ep-num">02</div>
+        <div>
+          <div class="ep-title">The Crack in the Light</div>
+          <div class="ep-desc">The moment that started all of this — told in full, for the first time.</div>
+        </div>
+        <div class="ep-status status-soon">Coming Soon</div>
+      </div>
+      <div class="ep">
+        <div class="ep-num">03</div>
+        <div>
+          <div class="ep-title">How I Got Here</div>
+          <div class="ep-desc">The road from certainty to this credo — the journey, not the conclusion.</div>
+        </div>
+        <div class="ep-status status-soon">Coming Soon</div>
+      </div>
+      <div class="ep">
+        <div class="ep-num">04</div>
+        <div>
+          <div class="ep-title">Closer to Home</div>
+          <div class="ep-desc">Testing "let live" on the people closest to it, before asking it of anyone else.</div>
+        </div>
+        <div class="ep-status status-soon">Coming Soon</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="about" id="about">
+  <div class="wrap about-inner">
+    <span class="eyebrow">The Purpose</span>
+    <h2 style="margin:16px 0 34px;font-size:clamp(28px,4vw,38px);">Why This Show Exists</h2>
+    <p>This work began as a personal reckoning — the moment <strong>Blair</strong> told his wife, with total conviction, that she was going to hell, using love, in his own words, "as a weapon."</p>
+    <p>Love and Let Live carries that reckoning forward: to spend the rest of a life sharing love with people rather than judgment — and to show, through Jesus and through every other tradition that has arrived at the same place, that God is love, love is everywhere, and embracing it is how we meet our creator.</p>
+  </div>
+</section>
+
+<footer id="support">
+  <div class="wrap foot-inner">
+    <div class="logo" style="font-size:16px;">Love <span>&amp;</span> Let Live</div>
+    <div class="foot-links">
+      <a href="#">Apple Podcasts</a>
+      <a href="#">Spotify</a>
+      <a href="#">YouTube</a>
+      <a href="#">RSS</a>
+    </div>
+    <div class="foot-support">If this show has ever meant something to you, and you'd like to <a href="#">help keep it going</a>, that's here — never asked, only offered.</div>
+    <div class="foot-copy">© 2026 Love and Let Live. There's more that brings us together than divides us.</div>
+    <div class="mock-note">— design mockup · links are placeholders, not yet live —</div>
+  </div>
+</footer>
+
+</body>
+</html>
