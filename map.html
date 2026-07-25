@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Map — Love and Let Live</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#04070f;
+    --gold:#f0b94d;
+    --gold-soft:#ffd88a;
+    --gold-pale:#fff6e0;
+    --text:#eef0f5;
+    --dim:#8b98b6;
+    --line:rgba(240,185,77,0.18);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;overflow:hidden;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    font-weight:300;
+    -webkit-font-smoothing:antialiased;
+  }
+  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);}
+  canvas{display:block;position:fixed;inset:0;width:100%;height:100%;touch-action:none;cursor:grab;}
+  canvas.dragging{cursor:grabbing;}
+
+  /* ---- top bar ---- */
+  .topbar{
+    position:fixed;top:0;left:0;right:0;z-index:20;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:22px 30px;
+    pointer-events:none;
+  }
+  .topbar > *{pointer-events:auto;}
+  .brand{
+    font-family:'Cormorant Garamond',serif;
+    font-size:17px;letter-spacing:0.16em;text-transform:uppercase;
+    color:rgba(238,240,245,0.9);text-decoration:none;
+  }
+  .brand span{color:var(--gold);}
+  .backlink{
+    font-size:11px;letter-spacing:0.18em;text-transform:uppercase;
+    color:var(--dim);text-decoration:none;transition:color .2s;
+  }
+  .backlink:hover{color:var(--gold-soft);}
+
+  /* ---- instruction ---- */
+  .hint{
+    position:fixed;left:50%;bottom:36px;transform:translateX(-50%);
+    z-index:15;text-align:center;pointer-events:none;
+    transition:opacity .6s ease;
+  }
+  .hint .k{
+    font-size:11px;letter-spacing:0.24em;text-transform:uppercase;
+    color:rgba(139,152,182,0.75);
+  }
+  .hint.hide{opacity:0;}
+
+  /* ---- detail panel ---- */
+  .panel{
+    position:fixed;top:0;right:0;bottom:0;width:420px;max-width:88vw;
+    z-index:30;
+    background:linear-gradient(270deg, rgba(5,9,20,0.97) 0%, rgba(5,9,20,0.93) 70%, rgba(5,9,20,0) 100%);
+    border-left:1px solid var(--line);
+    padding:76px 42px 42px;
+    overflow-y:auto;
+    transform:translateX(100%);
+    transition:transform .55s cubic-bezier(.16,.84,.34,1);
+  }
+  .panel.open{transform:translateX(0);}
+  .panel::-webkit-scrollbar{width:4px;}
+  .panel::-webkit-scrollbar-thumb{background:rgba(240,185,77,0.25);}
+  .panel .close{
+    position:absolute;top:24px;right:30px;
+    background:none;border:none;color:var(--dim);
+    font-size:22px;line-height:1;cursor:pointer;transition:color .2s;
+  }
+  .panel .close:hover{color:var(--gold-soft);}
+  .eyebrow{
+    font-size:10px;letter-spacing:0.28em;text-transform:uppercase;
+    color:var(--gold);font-weight:500;
+  }
+  .panel h2{
+    font-family:'Cormorant Garamond',serif;
+    font-size:40px;font-weight:500;line-height:1.1;
+    margin:12px 0 18px;
+  }
+  .panel .lede{color:var(--dim);font-size:15px;line-height:1.65;}
+  .divider{height:1px;background:var(--line);margin:32px 0 26px;}
+  .sub{
+    font-size:10px;letter-spacing:0.22em;text-transform:uppercase;
+    color:var(--dim);margin-bottom:16px;
+  }
+  .road{
+    display:block;padding:13px 0;
+    border-bottom:1px solid rgba(240,185,77,0.09);
+    cursor:pointer;background:none;border-left:0;border-right:0;border-top:0;
+    width:100%;text-align:left;font-family:inherit;
+  }
+  .road:hover .road-to{color:var(--gold-soft);}
+  .road-to{
+    font-size:14px;color:var(--text);transition:color .2s;
+    display:flex;align-items:center;gap:9px;
+  }
+  .road-to .arrow{color:var(--gold);opacity:.55;font-size:12px;}
+  .road-thread{
+    font-family:'Cormorant Garamond',serif;font-style:italic;
+    font-size:15px;color:var(--gold-soft);opacity:.82;margin-top:5px;
+  }
+  .ep{
+    display:flex;gap:15px;align-items:flex-start;
+    padding:15px 0;border-bottom:1px solid rgba(240,185,77,0.09);
+  }
+  .ep-n{
+    font-family:'Cormorant Garamond',serif;font-size:22px;
+    color:var(--gold);opacity:.6;min-width:26px;
+  }
+  .ep-t{font-size:14px;color:var(--text);margin-bottom:4px;}
+  .ep-s{font-size:12px;color:var(--dim);}
+  .ep-badge{
+    font-size:9px;letter-spacing:0.14em;text-transform:uppercase;
+    color:var(--dim);border:1px solid rgba(139,152,182,0.25);
+    padding:3px 9px;border-radius:20px;white-space:nowrap;margin-top:2px;
+  }
+  .empty{color:var(--dim);font-size:14px;font-style:italic;opacity:.7;}
+
+  /* ---- gate overlay ---- */
+  .gate{
+    position:fixed;inset:0;z-index:60;
+    background:rgba(4,7,15,0.94);
+    backdrop-filter:blur(6px);
+    display:flex;align-items:center;justify-content:center;
+    text-align:center;padding:40px;
+  }
+  .gate.hidden{display:none;}
+  .gate-in{max-width:520px;}
+  .gate h2{
+    font-family:'Cormorant Garamond',serif;font-size:clamp(30px,5vw,46px);
+    font-weight:500;margin:16px 0 20px;line-height:1.15;
+  }
+  .gate p{color:var(--dim);font-size:16px;line-height:1.7;margin-bottom:34px;}
+  .gate .btn{
+    display:inline-block;padding:14px 30px;background:var(--gold);color:#12101a;
+    font-size:12px;letter-spacing:0.14em;text-transform:uppercase;font-weight:500;
+    text-decoration:none;border-radius:2px;transition:background .2s;
+  }
+  .gate .btn:hover{background:var(--gold-soft);}
+  .gate .skip{
+    display:block;margin-top:22px;font-size:12px;color:rgba(139,152,182,0.6);
+    text-decoration:none;border-bottom:1px dotted rgba(139,152,182,0.35);
+    width:fit-content;margin-left:auto;margin-right:auto;cursor:pointer;
+  }
+  .gate .skip:hover{color:var(--dim);}
+
+  @media (max-width:720px){
+    .panel{width:100%;padding:70px 26px 34px;}
+    .topbar{padding:16px 20px;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .panel{transition:none;}
+  }
+</style>
+</head>
+<body>
+
+<h1 class="sr-only">The Map — an interactive world of entry points into Love and Let Live. Choose the tradition or worldview you come from, and see the threads connecting it to every other.</h1>
+
+<canvas id="c" aria-label="Interactive map of traditions" role="img"></canvas>
+
+<div class="topbar">
+  <a class="brand" href="index.html">Love <span>&amp;</span> Let Live</a>
+  <a class="backlink" href="index.html">← Back to Start</a>
+</div>
+
+<div class="hint" id="hint">
+  <div class="k">Drag to turn the world · Choose where you stand</div>
+</div>
+
+<aside class="panel" id="panel" aria-live="polite">
+  <button class="close" id="close" aria-label="Close">×</button>
+  <span class="eyebrow" id="p-eyebrow">Entry Point</span>
+  <h2 id="p-title"></h2>
+  <p class="lede" id="p-lede"></p>
+
+  <div class="divider"></div>
+  <div class="sub">Roads from here</div>
+  <div id="p-roads"></div>
+
+  <div class="divider"></div>
+  <div class="sub">Episodes on this road</div>
+  <div id="p-eps"></div>
+</aside>
+
+<div class="gate hidden" id="gate">
+  <div class="gate-in">
+    <span class="eyebrow">The Map Is Dark</span>
+    <h2>Every map needs a legend.</h2>
+    <p>The world beyond this point is built on a set of ground rules — what this show believes, what it refuses to claim, and what it asks of you. That's the first episode. Begin there, and the map lights up.</p>
+    <a class="btn" href="index.html#start">Start with the Credo</a>
+    <a class="skip" id="skip">I've already listened — let me in</a>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* =========================================================
+   CONFIG
+   ========================================================= */
+const GATE_ENABLED = false;   // flip to true once Episode 1 is live
+const GATE_KEY = 'lll_credo_complete';
+
+/* =========================================================
+   CONTENT  —  add a node here and it appears on the map.
+   angle: position around the world (degrees)
+   r:     distance from the centre (1.1 = close in, 2.7 = far out)
+   ========================================================= */
+const NODES = [
+  { id:'still-asking', label:'Still Asking', angle:0,   r:1.25, core:true,
+    lede:"You don't know. You've stopped pretending you do, and you're no longer sure that's a loss. This is where the host stands, so it's the honest centre of the map — not because doubt is superior, but because it's the only position this show holds without qualification." },
+
+  { id:'christian', label:'Christian', angle:42, r:2.0,
+    lede:"You were handed a faith, and some of it still holds. This is the tradition the show comes from and the one it questions hardest — because you don't get to interrogate someone else's house before your own." },
+
+  { id:'muslim', label:'Muslim', angle:88, r:2.35,
+    lede:"Ninety-nine names, and the first two are mercy and mercy again. If a tradition opens every act with compassion, that belongs on the map — not as a footnote to somebody else's story." },
+
+  { id:'jewish', label:'Jewish', angle:130, r:1.85,
+    lede:"The older root. Asked what mattered most, Hillel answered with what you don't do to your neighbour, and called the rest commentary. Christianity's central claim is a quotation, not an invention." },
+
+  { id:'buddhist', label:'Buddhist', angle:172, r:2.3,
+    lede:"No god required, and still it arrives at the same instruction: undo the self, attend to suffering that isn't yours. That it gets there by another road is exactly the point." },
+
+  { id:'hindu', label:'Hindu', angle:212, r:1.95,
+    lede:"The divine takes a body and walks among people. Long before Bethlehem, that story was already being told — which is either a problem for the doctrine or an opening in it." },
+
+  { id:'sikh', label:'Sikh', angle:250, r:2.45,
+    lede:"One God, no image, and a free kitchen at every door where anyone may sit — no rank, no test of belief. A theology you can eat." },
+
+  { id:'science', label:'Science', angle:292, r:2.05,
+    lede:"You want evidence, and you're not apologising for it. Neither is this show — 'how can you know?' is a scientific question before it's a spiritual one. Same instinct, different room." },
+
+  { id:'simulation', label:'The Matrix', angle:330, r:2.5,
+    lede:"What if what you're seeing isn't it. Every mystic in every tradition has said some version of that sentence, and now the culture says it in code. New vocabulary, old suspicion." },
+];
+
+/* Roads: the shared thread between two entry points.
+   This is the show's premise made literal. */
+const ROADS = [
+  ['still-asking','christian',  "How can you know? — asked from the inside"],
+  ['still-asking','muslim',     "Submission begins with admitting you are not God"],
+  ['still-asking','jewish',     "A tradition that argues with God and calls it faith"],
+  ['still-asking','buddhist',   "Test it yourself; believe nothing on authority"],
+  ['still-asking','hindu',      "Many names, one thing being named"],
+  ['still-asking','sikh',       "Truth is high; higher still is truthful living"],
+  ['still-asking','science',    "The willingness to be wrong is the method"],
+  ['still-asking','simulation', "Certainty is the first thing to distrust"],
+
+  ['christian','jewish',        "Love your neighbour as yourself — quoted, not coined"],
+  ['christian','muslim',        "Mercy arrives before judgment"],
+  ['christian','buddhist',      "Die to the self and you will find it"],
+  ['christian','hindu',         "The divine puts on a body"],
+  ['jewish','muslim',           "One God, and no image of him"],
+  ['muslim','sikh',             "No image, no priest, no rank at the door"],
+  ['buddhist','sikh',           "Serve the stranger before you are asked"],
+  ['buddhist','science',        "Observe first; believe after"],
+  ['hindu','buddhist',          "The self you defend is the thing in the way"],
+  ['science','simulation',      "What you perceive is a model, not the thing"],
+];
+
+/* Episodes attached to entry points. Add freely as the show grows. */
+const EPISODES = {
+  'still-asking':[
+    {n:'01', t:'Start Here — The Opening Credo', s:'Where I stand today', status:'Available', href:'index.html#start'},
+    {n:'02', t:'The Crack in the Light', s:'The moment that started all of this', status:'Coming'},
+    {n:'03', t:'How I Got Here', s:'From certainty to this credo', status:'Coming'},
+  ],
+  'christian':[
+    {n:'04', t:'Closer to Home', s:'Testing "let live" on the people closest to it', status:'Coming'},
+    {n:'—',  t:'"I Am the Way"', s:'The verse most used to close the door', status:'Planned'},
+  ],
+  'muslim':[  {n:'—', t:'The Merciful, The Compassionate', s:'Opening every act with mercy', status:'Planned'} ],
+  'jewish':[  {n:'—', t:'The Rest Is Commentary', s:'Hillel, and the sentence Jesus quoted', status:'Planned'} ],
+  'buddhist':[{n:'—', t:'No Self, No Sword', s:'Arriving at love without a god', status:'Planned'} ],
+  'hindu':[   {n:'—', t:'The God Who Took a Body', s:'Avatar and incarnation', status:'Planned'} ],
+  'sikh':[    {n:'—', t:'The Free Kitchen', s:'A theology you can eat', status:'Planned'} ],
+  'science':[ {n:'—', t:'How Can You Know?', s:'Doubt as method, not enemy', status:'Planned'} ],
+  'simulation':[{n:'—',t:'What If This Isn’t It', s:'Old mysticism in new code', status:'Planned'} ],
+};
+
+/* =========================================================
+   SETUP
+   ========================================================= */
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d');
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let W=0, H=0, DPR=1;
+
+const byId = {}; NODES.forEach(n=>byId[n.id]=n);
+const roadsOf = {};
+ROADS.forEach(([a,b,thread])=>{
+  (roadsOf[a] ||= []).push({to:b, thread});
+  (roadsOf[b] ||= []).push({to:a, thread});
+});
+
+function resize(){
+  DPR = Math.min(window.devicePixelRatio||1, 2);
+  W = cv.clientWidth; H = cv.clientHeight;
+  cv.width = Math.round(W*DPR); cv.height = Math.round(H*DPR);
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  buildStars();
+}
+addEventListener('resize', resize);
+
+/* =========================================================
+   CAMERA + PROJECTION
+   The world is a flat disc in the y=0 plane. The camera sits
+   above it, pitched down. Dragging spins the disc, not the camera.
+   ========================================================= */
+/* Verified against every marker at every rotation on
+   1440x900 / 1920x1080 / 1280x720 / 834x1112 / 390x780. */
+const HORIZON_FRAC = 0.26;   // horizon 26% down -> sky above, ground fills the rest
+const WORLD_SCALE  = 1.9;    // spreads the markers across the full frame
+const VIEW_WIDE  = { h:2.60, d:4.80, pitch:0.30, fk:0.40, cxOff:0   };
+// Deliberately the same lens — only the framing shifts left to clear the panel.
+// A tighter focus lens shrinks the reachable band and strands markers on the
+// horizon, so selection is carried by rotation and light instead.
+const VIEW_FOCUS = { h:2.60, d:4.80, pitch:0.30, fk:0.40, cxOff:205 };
+
+const cam       = { ...VIEW_WIDE };
+const camTarget = { ...VIEW_WIDE };
+let horizonY = 0, anchorY = 0, focalPx = 0, centreX = 0;
+
+function updateFrustum(){
+  const base = Math.min(H, W*1.05);   // narrow screens shrink the world to fit
+  focalPx  = cam.fk * base;
+  horizonY = H * HORIZON_FRAC;
+  anchorY  = horizonY + focalPx*Math.tan(cam.pitch);
+  const panelActive = selected && W > 720;
+  centreX  = W/2 - (panelActive ? cam.cxOff : 0);
+}
+
+let rot = 0.35;         // current world rotation
+let rotVel = 0;         // angular velocity (inertia)
+let rotTarget = null;   // when easing to a selected node
+let dragging = false, lastX = 0, movedDuring = 0;
+let selected = null;    // node id
+let hovered = null;
+let t0 = performance.now();
+
+function project(x, y, z){
+  const c = Math.cos(rot), s = Math.sin(rot);
+  const X = x*c - z*s;
+  const Z = x*s + z*c;
+  const Yc = cam.h - y;          // positive = below the camera
+  const Zc = Z + cam.d;
+  const cp = Math.cos(cam.pitch), sp = Math.sin(cam.pitch);
+  const Y2 = Yc*cp - Zc*sp;
+  const Z2 = Yc*sp + Zc*cp;
+  if (Z2 <= 0.05) return null;   // behind / at the camera
+  const f = focalPx / Z2;
+  return { x: centreX + X*f, y: anchorY + Y2*f, z: Z2, f };
+}
+/** node world position (before rotation) */
+function nodePos(n){
+  const a = n.angle * Math.PI/180;
+  const r = n.r * WORLD_SCALE;
+  return { x: Math.sin(a)*r, y:0, z: Math.cos(a)*r };
+}
+
+/** Project using an arbitrary view + rotation, independent of the live camera.
+    Used to solve where a marker will land before we animate there. */
+function projectWith(view, rotV, x, y, z){
+  const base = Math.min(H, W*1.05);
+  const focal = view.fk*base;
+  const cp = Math.cos(view.pitch), sp = Math.sin(view.pitch);
+  const hz = H*HORIZON_FRAC;
+  const anc = hz + focal*Math.tan(view.pitch);
+  const cX = W/2 - (W > 720 ? view.cxOff : 0);
+  const c = Math.cos(rotV), s = Math.sin(rotV);
+  const X = x*c - z*s, Z = x*s + z*c;
+  const Y2 = (view.h - y)*cp - (Z + view.d)*sp;
+  const Z2 = (view.h - y)*sp + (Z + view.d)*cp;
+  if (Z2 <= 0.05) return null;
+  const f = focal/Z2;
+  return { x: cX + X*f, y: anc + Y2*f, f, horizon: hz };
+}
+
+/** Find the rotation that parks a node in the clear area, as near as possible.
+    Rotation can only move a node along one curve, so an exact target is often
+    unreachable — we weight horizontal placement hard, vertical loosely, and
+    reward bringing the node toward the foreground. */
+function solveRotationFor(n, tx, ty){
+  const wp = nodePos(n);
+  const samples = [];
+  let fmin = Infinity, fmax = 0;
+  for (let i=0;i<720;i++){
+    const rv = i/720*Math.PI*2;
+    const p = projectWith(VIEW_FOCUS, rv, wp.x, 0, wp.z);
+    if (!p) continue;
+    if (p.y < p.horizon + 60 || p.y > H - 90) continue;   // unusable placements
+    samples.push({ rv, p });
+    if (p.f < fmin) fmin = p.f;
+    if (p.f > fmax) fmax = p.f;
+  }
+  if (!samples.length) return rot;
+  // Weights fitted against every node on every tested viewport: horizontal
+  // placement dominates, vertical is a soft preference, and a hard penalty
+  // keeps markers off the edges and out from behind the panel.
+  const usableW = (W > 720) ? W - 420 : W;
+  let best = null;
+  for (const s of samples){
+    const dx = (s.p.x - tx)/W, dy = (s.p.y - ty)/H;
+    let cost = dx*dx*6 + dy*dy*3;
+    if (s.p.x < usableW*0.18 || s.p.x > usableW*0.82) cost += 0.6;
+    if (!best || cost < best.cost) best = { cost, rot: s.rv };
+  }
+  return best.rot;
+}
+
+/* =========================================================
+   STARFIELD
+   ========================================================= */
+let stars = [];
+function buildStars(){
+  stars = [];
+  const count = Math.round((W*H)/5200);
+  for (let i=0;i<count;i++){
+    stars.push({
+      x: Math.random(),
+      y: Math.random(),
+      r: Math.random()*1.25+0.25,
+      a: Math.random()*0.55+0.12,
+      tw: Math.random()*Math.PI*2,
+      sp: Math.random()*0.9+0.25,
+    });
+  }
+}
+function drawStars(time){
+  const skyH = horizonY + 30;
+
+  // faint milky band
+  const g = ctx.createLinearGradient(W*0.15,0,W*0.95,skyH);
+  g.addColorStop(0,'rgba(24,42,86,0)');
+  g.addColorStop(0.45,'rgba(38,62,116,0.32)');
+  g.addColorStop(1,'rgba(24,42,86,0)');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,skyH);
+
+  const drift = (rot*0.06) % 1;
+  for (const s of stars){
+    const sx = ((s.x - drift) % 1 + 1) % 1 * W;
+    const sy = s.y * skyH;
+    const tw = reduceMotion ? 1 : (0.72 + 0.28*Math.sin(time*0.0011*s.sp + s.tw));
+    // fade stars out as they approach the horizon
+    ctx.globalAlpha = s.a * tw * Math.min(1, (skyH - sy)/70 + 0.15);
+    ctx.fillStyle = '#dce8ff';
+    ctx.beginPath(); ctx.arc(sx, sy, s.r, 0, 6.2832); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+/* =========================================================
+   THE GROUND WEB  — concentric rings + radial filaments
+   ========================================================= */
+function drawGround(time){
+  const RINGS = 15, SEG = 84, RMAX = 6.2;   // extends past the outermost marker
+  ctx.lineWidth = 1;
+
+  for (let i=1;i<=RINGS;i++){
+    const r = (i/RINGS)*RMAX;
+    ctx.beginPath();
+    let started=false;
+    for (let j=0;j<=SEG;j++){
+      const a = (j/SEG)*Math.PI*2;
+      const p = project(Math.sin(a)*r, 0, Math.cos(a)*r);
+      if(!p){ started=false; continue; }
+      if(!started){ ctx.moveTo(p.x,p.y); started=true; } else ctx.lineTo(p.x,p.y);
+    }
+    const fade = 0.40 * (1 - i/(RINGS+5));
+    ctx.strokeStyle = `rgba(240,185,77,${fade})`;
+    ctx.stroke();
+  }
+
+  const SPOKES = 52;
+  for (let k=0;k<SPOKES;k++){
+    const a = (k/SPOKES)*Math.PI*2;
+    ctx.beginPath();
+    let started=false;
+    for (let j=0;j<=20;j++){
+      const r = (j/20)*RMAX;
+      const p = project(Math.sin(a)*r, 0, Math.cos(a)*r);
+      if(!p){ started=false; continue; }
+      if(!started){ ctx.moveTo(p.x,p.y); started=true; } else ctx.lineTo(p.x,p.y);
+    }
+    ctx.strokeStyle = 'rgba(240,185,77,0.16)';
+    ctx.stroke();
+  }
+
+  // bright pool directly beneath the orb
+  const c0 = project(0,0,0);
+  if (c0){
+    const pulse = reduceMotion ? 1 : (0.88 + 0.12*Math.sin(time*0.0013));
+    const rad = Math.min(H, W*1.05)*0.17*pulse;
+    const g = ctx.createRadialGradient(c0.x,c0.y,0,c0.x,c0.y,rad);
+    g.addColorStop(0,'rgba(255,214,138,0.34)');
+    g.addColorStop(0.45,'rgba(240,185,77,0.10)');
+    g.addColorStop(1,'rgba(240,185,77,0)');
+    ctx.fillStyle=g;
+    ctx.beginPath(); ctx.ellipse(c0.x,c0.y,rad,rad*0.34,0,0,6.2832); ctx.fill();
+  }
+}
+
+/* =========================================================
+   ROADS  — arcs lifted above the plane, like the cover art
+   ========================================================= */
+function roadPoints(a, b, lift){
+  const pa = nodePos(a), pb = nodePos(b);
+  const pts = [];
+  const N = 26;
+  for (let i=0;i<=N;i++){
+    const t = i/N;
+    const x = pa.x + (pb.x-pa.x)*t;
+    const z = pa.z + (pb.z-pa.z)*t;
+    const y = Math.sin(t*Math.PI) * lift * WORLD_SCALE;
+    // bow the arc outward from centre so it reads as a route, not a chord
+    const bow = Math.sin(t*Math.PI)*0.22*WORLD_SCALE;
+    const len = Math.hypot(x,z) || 1;
+    const p = project(x + (x/len)*bow, y, z + (z/len)*bow);
+    pts.push(p);
+  }
+  return pts;
+}
+function strokePath(pts, style, width){
+  ctx.beginPath();
+  let started=false;
+  for (const p of pts){
+    if(!p){ started=false; continue; }
+    if(!started){ ctx.moveTo(p.x,p.y); started=true; } else ctx.lineTo(p.x,p.y);
+  }
+  ctx.strokeStyle=style; ctx.lineWidth=width; ctx.stroke();
+}
+function drawRoads(time){
+  for (const [aId,bId] of ROADS){
+    const a = byId[aId], b = byId[bId];
+    if(!a||!b) continue;
+    const active = selected && (selected===aId || selected===bId);
+    const dim    = selected && !active;
+    const lift = 0.34 + 0.13*Math.abs(Math.sin((a.angle+b.angle)*0.017));
+    const pts = roadPoints(a,b,lift);
+
+    if (active){
+      strokePath(pts, 'rgba(255,214,138,0.10)', 7);
+      strokePath(pts, 'rgba(255,232,190,0.72)', 1.6);
+      if (!reduceMotion){
+        // a pulse of light travelling the road
+        const N = pts.length-1;
+        const head = ((time*0.00022) % 1);
+        for (let k=0;k<7;k++){
+          const t = (head - k*0.028 + 1) % 1;
+          const p = pts[Math.round(t*N)];
+          if(!p) continue;
+          ctx.globalAlpha = (1 - k/7)*0.85;
+          ctx.fillStyle = '#fff6e0';
+          ctx.beginPath(); ctx.arc(p.x,p.y, 2.3 - k*0.22, 0, 6.2832); ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      }
+    } else {
+      strokePath(pts, dim ? 'rgba(240,185,77,0.07)' : 'rgba(240,185,77,0.38)', 1);
+    }
+  }
+}
+
+/* =========================================================
+   THE ORB  — fixed above the centre, alive
+   ========================================================= */
+function drawOrb(time){
+  // Screen-anchored: the orb is a fixed presence above the horizon and the
+  // world turns beneath it. Keeps it stable across cameras and viewports.
+  const base = Math.min(H, W*1.05);
+  const breathe = reduceMotion ? 1 : (1 + 0.045*Math.sin(time*0.0009));
+  const R  = base*0.062 * breathe;
+  const ox = centreX;
+  const oy = horizonY - base*0.115;
+
+  // outer halo
+  let g = ctx.createRadialGradient(ox,oy,R*0.35, ox,oy,R*6.0);
+  g.addColorStop(0,'rgba(255,214,138,0.52)');
+  g.addColorStop(0.18,'rgba(250,196,96,0.22)');
+  g.addColorStop(0.45,'rgba(240,185,77,0.075)');
+  g.addColorStop(1,'rgba(240,185,77,0)');
+  ctx.fillStyle=g;
+  ctx.beginPath(); ctx.arc(ox,oy,R*6.0,0,6.2832); ctx.fill();
+
+  // radiating filaments
+  const FIL = 30;
+  for (let i=0;i<FIL;i++){
+    const base = (i/FIL)*Math.PI*2;
+    const wob = reduceMotion ? 0 : Math.sin(time*0.0006 + i*1.7)*0.05;
+    const a = base + wob;
+    const len = R*(2.5 + 2.6*Math.abs(Math.sin(i*2.4)));
+    ctx.beginPath();
+    ctx.moveTo(ox + Math.cos(a)*R*1.02, oy + Math.sin(a)*R*1.02);
+    ctx.quadraticCurveTo(
+      ox + Math.cos(a-0.28)*len*0.75, oy + Math.sin(a-0.28)*len*0.75,
+      ox + Math.cos(a-0.5)*len,       oy + Math.sin(a-0.5)*len
+    );
+    ctx.strokeStyle = `rgba(240,185,77,${0.05 + 0.09*Math.abs(Math.sin(i*1.3))})`;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  // body
+  g = ctx.createRadialGradient(ox,oy-R*0.12,R*0.05, ox,oy,R);
+  g.addColorStop(0,'#fffdf4');
+  g.addColorStop(0.22,'#ffeec2');
+  g.addColorStop(0.58,'#f5c463');
+  g.addColorStop(0.88,'#e0a23c');
+  g.addColorStop(1,'rgba(198,138,44,0.75)');
+  ctx.fillStyle=g;
+  ctx.beginPath(); ctx.arc(ox,oy,R,0,6.2832); ctx.fill();
+
+  // inner petal structure
+  ctx.save();
+  ctx.beginPath(); ctx.arc(ox,oy,R,0,6.2832); ctx.clip();
+  const spin = reduceMotion ? 0 : time*0.00007;
+  for (let i=0;i<20;i++){
+    const a = (i/20)*Math.PI*2 + spin;
+    ctx.beginPath();
+    ctx.ellipse(ox + Math.cos(a)*R*0.32, oy + Math.sin(a)*R*0.32,
+                R*0.56, R*0.20, a, 0, 6.2832);
+    ctx.strokeStyle='rgba(255,250,235,0.11)'; ctx.lineWidth=1; ctx.stroke();
+  }
+  ctx.restore();
+
+  // hot core
+  g = ctx.createRadialGradient(ox,oy,0,ox,oy,R*0.34);
+  g.addColorStop(0,'rgba(255,255,255,0.95)');
+  g.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=g;
+  ctx.beginPath(); ctx.arc(ox,oy,R*0.34,0,6.2832); ctx.fill();
+}
+
+/* =========================================================
+   MARKERS
+   ========================================================= */
+let hitboxes = [];
+function drawNodes(time){
+  hitboxes = [];
+  const list = NODES.map(n=>{
+    const wp = nodePos(n);
+    return { n, p: project(wp.x, 0, wp.z) };
+  }).filter(o=>o.p);
+
+  // painter's algorithm: far first
+  list.sort((a,b)=> b.p.z - a.p.z);
+
+  for (const {n,p} of list){
+    const isSel = selected === n.id;
+    const isHov = hovered === n.id;
+    const connected = selected && roadsOf[selected]?.some(r=>r.to===n.id);
+    const dim = selected && !isSel && !connected;
+
+    // Depth cue: p.f is the perspective factor. Normalise against viewport so
+    // markers keep the same relative weight on a phone and a 4K display.
+    const base = Math.min(H, W*1.05);
+    const nf = p.f / (base*0.12);
+    // Compressed on purpose: true 6x perspective scaling makes far markers
+    // unreadable. Depth is carried by position and opacity instead.
+    let s = Math.max(0.72, Math.min(1.45, 0.55 + nf*0.45));
+    // Selection is carried by light and weight, not by flying the camera around.
+    if (isSel) s *= 1.45;
+    const pinH = base*0.030*s, pinW = base*0.0112*s;
+    let alpha = Math.max(0.52, Math.min(1, 0.45 + nf*0.42));
+    if (isSel) alpha = 1;
+    if (dim) alpha *= 0.30;
+
+    // ground glow
+    ctx.globalAlpha = alpha*(isSel?0.85:0.4);
+    const gr = base*0.029*s;
+    const gg = ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,gr);
+    gg.addColorStop(0,'rgba(255,214,138,0.55)');
+    gg.addColorStop(1,'rgba(255,214,138,0)');
+    ctx.fillStyle=gg;
+    ctx.beginPath(); ctx.ellipse(p.x,p.y,gr,gr*0.34,0,0,6.2832); ctx.fill();
+
+    // pin
+    ctx.globalAlpha = alpha;
+    const pulse = (isSel && !reduceMotion) ? (1+0.07*Math.sin(time*0.004)) : 1;
+    const top = p.y - pinH*pulse;
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
+    ctx.quadraticCurveTo(p.x - pinW, p.y - pinH*0.62, p.x - pinW*0.86, top + pinW*0.5);
+    ctx.arc(p.x, top + pinW*0.5, pinW*0.86, Math.PI, 0);
+    ctx.quadraticCurveTo(p.x + pinW, p.y - pinH*0.62, p.x, p.y);
+    ctx.closePath();
+    ctx.fillStyle = isSel ? '#fff2d2' : (isHov ? '#ffd88a' : 'rgba(240,185,77,0.92)');
+    ctx.fill();
+    // hole
+    ctx.beginPath();
+    ctx.arc(p.x, top + pinW*0.5, pinW*0.32, 0, 6.2832);
+    ctx.fillStyle = '#060a14'; ctx.fill();
+
+    // label — a soft dark halo keeps it readable without a visible box
+    const fs = Math.max(13, Math.min(26, base*0.0185*s));
+    ctx.font = `${isSel?500:400} ${fs}px 'Cormorant Garamond', serif`;
+    ctx.textAlign='center'; ctx.textBaseline='alphabetic';
+    const ly = top - pinW*1.6;
+    ctx.globalAlpha = alpha;
+    ctx.save();
+    ctx.shadowColor = 'rgba(2,4,10,0.95)';
+    ctx.shadowBlur = 9;
+    ctx.fillStyle = isSel ? '#fff6e0' : (isHov ? '#ffd88a' : 'rgba(240,243,250,0.94)');
+    ctx.fillText(n.label, p.x, ly);
+    ctx.fillText(n.label, p.x, ly);   // twice = denser halo, no box needed
+    ctx.restore();
+
+    if (n.core && !dim){
+      const fs2 = Math.max(8, fs*0.40);
+      ctx.globalAlpha = alpha*0.85;
+      ctx.font = `500 ${fs2}px Inter, sans-serif`;
+      ctx.save();
+      ctx.shadowColor='rgba(2,4,10,0.95)'; ctx.shadowBlur=8;
+      ctx.fillStyle = 'rgba(240,185,77,0.95)';
+      ctx.fillText('YOU ARE HERE', p.x, ly - fs*1.05);
+      ctx.restore();
+    }
+
+    ctx.globalAlpha = 1;
+    hitboxes.push({ id:n.id, x:p.x, y:(p.y+top)/2, r: Math.max(26, pinH*0.85) });
+  }
+}
+
+/* =========================================================
+   VIGNETTE
+   ========================================================= */
+function drawVignette(){
+  const g = ctx.createRadialGradient(W/2,H*0.5,Math.min(W,H)*0.30, W/2,H*0.5,Math.max(W,H)*0.78);
+  g.addColorStop(0,'rgba(4,7,15,0)');
+  g.addColorStop(1,'rgba(4,7,15,0.82)');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+}
+
+/* =========================================================
+   LOOP
+   ========================================================= */
+function frame(now){
+  const time = now - t0;
+
+  // rotation physics
+  if (rotTarget !== null){
+    rot += (rotTarget - rot)*0.075;
+    if (Math.abs(rotTarget - rot) < 0.0015){ rot = rotTarget; rotTarget = null; }
+  } else if (!dragging){
+    rot += rotVel;
+    rotVel *= 0.955;
+    if (Math.abs(rotVel) < 0.00004) rotVel = 0;
+    if (!selected && rotVel === 0 && !reduceMotion) rot += 0.00042; // slow idle drift
+  }
+
+  // camera easing
+  for (const k of ['h','d','pitch','fk','cxOff']){
+    cam[k] += (camTarget[k] - cam[k]) * 0.06;
+  }
+  updateFrustum();
+
+  ctx.fillStyle = '#04070f';
+  ctx.fillRect(0,0,W,H);
+
+  drawStars(time);
+  drawGround(time);
+  drawRoads(time);
+  drawOrb(time);
+  drawNodes(time);
+  drawVignette();
+
+  requestAnimationFrame(frame);
+}
+
+/* =========================================================
+   INTERACTION
+   ========================================================= */
+function pointFromEvent(e){
+  const r = cv.getBoundingClientRect();
+  const src = e.touches ? e.touches[0] : e;
+  return { x: src.clientX - r.left, y: src.clientY - r.top };
+}
+function hitTest(pt){
+  let best=null, bestD=Infinity;
+  for (const h of hitboxes){
+    const d = Math.hypot(pt.x-h.x, pt.y-h.y);
+    if (d < h.r && d < bestD){ best=h.id; bestD=d; }
+  }
+  return best;
+}
+
+cv.addEventListener('pointerdown', e=>{
+  dragging = true; movedDuring = 0;
+  lastX = pointFromEvent(e).x;
+  rotTarget = null;
+  cv.classList.add('dragging');
+  cv.setPointerCapture(e.pointerId);
+  document.getElementById('hint').classList.add('hide');
+});
+cv.addEventListener('pointermove', e=>{
+  const pt = pointFromEvent(e);
+  if (dragging){
+    const dx = pt.x - lastX;
+    lastX = pt.x;
+    movedDuring += Math.abs(dx);
+    rot += dx*0.0052;
+    rotVel = dx*0.0052;
+  } else {
+    const h = hitTest(pt);
+    if (h !== hovered){ hovered = h; cv.style.cursor = h ? 'pointer' : 'grab'; }
+  }
+});
+function endDrag(e){
+  if (!dragging) return;
+  dragging = false;
+  cv.classList.remove('dragging');
+  if (movedDuring < 5){
+    const id = hitTest(pointFromEvent(e));
+    if (id) selectNode(id); else deselect();
+  }
+}
+cv.addEventListener('pointerup', endDrag);
+cv.addEventListener('pointercancel', ()=>{ dragging=false; cv.classList.remove('dragging'); });
+
+/* keyboard access */
+addEventListener('keydown', e=>{
+  if (e.key === 'Escape') deselect();
+  if (e.key === 'ArrowLeft'){ rotTarget=null; rot -= 0.12; }
+  if (e.key === 'ArrowRight'){ rotTarget=null; rot += 0.12; }
+});
+
+/* =========================================================
+   SELECTION + PANEL
+   ========================================================= */
+const panel = document.getElementById('panel');
+
+function selectNode(id){
+  selected = id;
+  const n = byId[id];
+
+  // Turn the world so this node parks in the clear area beside the panel.
+  // Solved numerically, so it works for any radius, viewport, or future node.
+  const usableW = (W > 720) ? W - 420 : W;
+  const hz = H*HORIZON_FRAC;
+  let target = solveRotationFor(n, usableW*0.42, hz + (H-hz)*0.60);
+  while (target - rot >  Math.PI) target -= Math.PI*2;
+  while (target - rot < -Math.PI) target += Math.PI*2;
+  rotTarget = target; rotVel = 0;
+
+  Object.assign(camTarget, VIEW_FOCUS);
+
+  document.getElementById('p-eyebrow').textContent = n.core ? 'The Centre of the Map' : 'Entry Point';
+  document.getElementById('p-title').textContent = n.label;
+  document.getElementById('p-lede').textContent = n.lede;
+
+  const rWrap = document.getElementById('p-roads');
+  rWrap.innerHTML = '';
+  const rs = roadsOf[id] || [];
+  if (!rs.length){
+    rWrap.innerHTML = '<div class="empty">No roads charted yet.</div>';
+  } else {
+    rs.forEach(r=>{
+      const b = document.createElement('button');
+      b.className='road';
+      b.innerHTML = `<div class="road-to"><span class="arrow">→</span>${byId[r.to].label}</div>
+                     <div class="road-thread">"${r.thread}"</div>`;
+      b.addEventListener('click', ()=> selectNode(r.to));
+      rWrap.appendChild(b);
+    });
+  }
+
+  const eWrap = document.getElementById('p-eps');
+  eWrap.innerHTML = '';
+  const eps = EPISODES[id] || [];
+  if (!eps.length){
+    eWrap.innerHTML = '<div class="empty">Episodes for this road are still being written.</div>';
+  } else {
+    eps.forEach(ep=>{
+      const d = document.createElement('div');
+      d.className='ep';
+      d.innerHTML = `<div class="ep-n">${ep.n}</div>
+        <div style="flex:1"><div class="ep-t">${ep.t}</div><div class="ep-s">${ep.s}</div></div>
+        <div class="ep-badge">${ep.status}</div>`;
+      if (ep.href){ d.style.cursor='pointer'; d.addEventListener('click', ()=> location.href = ep.href); }
+      eWrap.appendChild(d);
+    });
+  }
+
+  panel.classList.add('open');
+  panel.scrollTop = 0;
+}
+
+function deselect(){
+  selected = null;
+  panel.classList.remove('open');
+  Object.assign(camTarget, VIEW_WIDE);
+}
+document.getElementById('close').addEventListener('click', deselect);
+
+/* =========================================================
+   GATE
+   ========================================================= */
+(function(){
+  const gate = document.getElementById('gate');
+  let passed = true;
+  try { passed = localStorage.getItem(GATE_KEY) === '1'; } catch(err){ passed = true; }
+  if (GATE_ENABLED && !passed){
+    gate.classList.remove('hidden');
+    document.getElementById('skip').addEventListener('click', ()=>{
+      try { localStorage.setItem(GATE_KEY,'1'); } catch(err){}
+      gate.classList.add('hidden');
+    });
+  }
+})();
+
+/* =========================================================
+   GO
+   ========================================================= */
+resize();
+requestAnimationFrame(frame);
+setTimeout(()=>document.getElementById('hint').classList.add('hide'), 9000);
+</script>
+</body>
+</html>
