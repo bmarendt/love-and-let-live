@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Not on the map — Love and Let Live</title>
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#04070f;--gold:#f0b94d;--gold-soft:#ffd88a;--text:#eef0f5;--dim:#8b98b6;
+        --line:rgba(240,185,77,0.18);}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    background:var(--bg);color:var(--text);min-height:100vh;
+    font-family:'Inter',sans-serif;font-weight:300;
+    display:flex;align-items:center;justify-content:center;
+    text-align:center;padding:40px;
+    background-image:radial-gradient(circle at 50% 22%, rgba(240,185,77,0.16), rgba(4,7,15,0) 46%);
+  }
+  .wrap{max-width:520px;}
+  .orb{
+    width:96px;height:96px;border-radius:50%;margin:0 auto 34px;
+    background:radial-gradient(circle at 50% 44%, #fffdf4 0%, #ffeec2 22%, #f5c463 58%, #e0a23c 88%, rgba(198,138,44,.75) 100%);
+    box-shadow:0 0 70px 18px rgba(240,185,77,0.22);
+  }
+  .eyebrow{font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:var(--gold);font-weight:500;}
+  h1{font-family:'Cormorant Garamond',serif;font-weight:500;
+     font-size:clamp(30px,5vw,46px);line-height:1.15;margin:16px 0 18px;}
+  p{color:var(--dim);font-size:16px;line-height:1.7;margin-bottom:32px;}
+  .row{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;}
+  a{text-decoration:none;padding:13px 28px;border-radius:2px;
+    font-size:11.5px;letter-spacing:0.14em;text-transform:uppercase;transition:all .2s;}
+  .solid{background:var(--gold);color:#12101a;font-weight:600;}
+  .solid:hover{background:var(--gold-soft);}
+  .ghost{border:1px solid rgba(238,240,245,0.26);color:var(--text);}
+  .ghost:hover{border-color:var(--gold);color:var(--gold-soft);}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="orb"></div>
+    <span class="eyebrow">404</span>
+    <h1>This road isn't on the map.</h1>
+    <p>Whatever you were looking for isn't here — either it moved, or it hasn't been made yet. Both happen on a show that admits it doesn't know where it's going.</p>
+    <div class="row">
+      <a class="solid" href="/">Back to the Beginning</a>
+      <a class="ghost" href="/map.html">Open the Map</a>
+    </div>
+  </div>
+</body>
+</html>
