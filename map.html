@@ -449,11 +449,11 @@ const EPISODES = {
 
 /* -----------------------------------------------------------------------
    EPISODE REQUESTS
-   Built and ready, switched off until there's somewhere for them to go.
-   To turn on: set REQUESTS_ENABLED = true and paste a form endpoint
-   (Formspree, Tally, Formspark) into REQUEST_ENDPOINT. Leaving the endpoint
-   empty falls back to composing an email to REQUEST_MAILTO instead — which
-   does publish that address on a public page, so it's off by default.
+   Live, currently composing an email to REQUEST_MAILTO. That address is a
+   forward-only show address, so publishing it here is cheap to undo.
+   To upgrade: paste a form endpoint (Formspree, Tally, Formspark) into
+   REQUEST_ENDPOINT and requests POST there instead — structured, spam-filtered,
+   and no mail client involved. The mailto stays as the fallback.
    ----------------------------------------------------------------------- */
 const REQUESTS_ENABLED = true;
 const REQUEST_ENDPOINT = '';                        // set this to switch to a form service
