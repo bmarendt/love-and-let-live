@@ -455,9 +455,9 @@ const EPISODES = {
    empty falls back to composing an email to REQUEST_MAILTO instead — which
    does publish that address on a public page, so it's off by default.
    ----------------------------------------------------------------------- */
-const REQUESTS_ENABLED = false;
-const REQUEST_ENDPOINT = '';
-const REQUEST_MAILTO   = '';
+const REQUESTS_ENABLED = true;
+const REQUEST_ENDPOINT = '';                        // set this to switch to a form service
+const REQUEST_MAILTO   = 'hello@loveandletlive.com';
 
 /* =======================================================================
    VIEW STATES
@@ -1065,8 +1065,11 @@ reqForm.addEventListener('submit',async e=>{
       location.href='mailto:'+REQUEST_MAILTO+
         '?subject='+encodeURIComponent('Episode request — '+data.entry_point)+
         '&body='+encodeURIComponent(body);
-      reqMsg.textContent='Opening your email app…';
-      setTimeout(closeRequest,1600);
+      // If no mail handler is registered nothing visibly happens, so always
+      // leave the address on screen to copy.
+      reqMsg.innerHTML='Opening your email app… if nothing happens, send it to '+
+        '<a href="mailto:'+REQUEST_MAILTO+'" style="color:#ffd88a">'+REQUEST_MAILTO+'</a>';
+      send.disabled=false;
     } else {
       throw new Error('No destination configured');
     }
