@@ -171,7 +171,58 @@
   .ep-s{font-size:12px;color:var(--dim);}
   .ep-badge{font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--dim);
     border:1px solid rgba(139,152,182,0.25);padding:3px 9px;border-radius:20px;white-space:nowrap;margin-top:2px;}
-  .empty{color:var(--dim);font-size:14px;font-style:italic;opacity:.7;}
+  .empty{color:var(--dim);font-size:14px;line-height:1.6;}
+
+  /* ---------- request ---------- */
+  .req-btn{
+    display:block;width:100%;margin-top:18px;padding:13px 18px;
+    background:rgba(240,185,77,0.08);border:1px solid var(--line);
+    color:var(--gold-soft);border-radius:3px;cursor:pointer;
+    font-family:inherit;font-size:11.5px;letter-spacing:0.14em;
+    text-transform:uppercase;transition:background .2s,border-color .2s;
+  }
+  .req-btn:hover{background:rgba(240,185,77,0.16);border-color:rgba(240,185,77,0.42);}
+  .modal{
+    position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;
+    background:rgba(3,5,12,0.82);backdrop-filter:blur(7px);padding:26px;
+  }
+  .modal[hidden]{display:none;}
+  .modal-box{
+    width:min(520px,100%);max-height:88vh;overflow-y:auto;
+    background:#0a1122;border:1px solid var(--line);border-radius:6px;padding:38px;
+  }
+  .modal-box h3{
+    font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:500;
+    margin:10px 0 10px;
+  }
+  .modal-box .intro{color:var(--dim);font-size:14px;line-height:1.6;margin-bottom:24px;}
+  .field{margin-bottom:18px;}
+  .field label{
+    display:block;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;
+    color:var(--dim);margin-bottom:7px;
+  }
+  .field label .opt{text-transform:none;letter-spacing:0.02em;opacity:.65;}
+  .field input,.field textarea,.field select{
+    width:100%;padding:11px 13px;background:rgba(255,255,255,0.035);
+    border:1px solid rgba(240,185,77,0.16);border-radius:3px;
+    color:var(--text);font-family:inherit;font-size:14.5px;font-weight:300;
+  }
+  .field textarea{min-height:118px;resize:vertical;line-height:1.55;}
+  .field input:focus,.field textarea:focus,.field select:focus{
+    outline:none;border-color:rgba(240,185,77,0.5);background:rgba(255,255,255,0.055);
+  }
+  .field select option{background:#0a1122;}
+  .modal-actions{display:flex;gap:12px;justify-content:flex-end;margin-top:26px;}
+  .btn-ghost,.btn-solid{
+    padding:12px 24px;border-radius:2px;cursor:pointer;font-family:inherit;
+    font-size:11.5px;letter-spacing:0.14em;text-transform:uppercase;
+  }
+  .btn-ghost{background:none;border:1px solid rgba(238,240,245,0.22);color:var(--dim);}
+  .btn-ghost:hover{color:var(--text);border-color:rgba(238,240,245,0.4);}
+  .btn-solid{background:var(--gold);border:none;color:#12101a;font-weight:600;}
+  .btn-solid:hover{background:var(--gold-soft);}
+  .btn-solid:disabled{opacity:.5;cursor:default;}
+  .form-msg{margin-top:16px;font-size:13.5px;color:var(--gold-soft);line-height:1.55;}
 
   @media (max-width:720px){
     .panel{width:100%;padding:70px 26px 34px;}
@@ -229,6 +280,39 @@
   <div id="p-eps"></div>
 </aside>
 
+<!-- ============ REQUEST AN EPISODE ============ -->
+<div class="modal" id="req-modal" hidden role="dialog" aria-modal="true" aria-labelledby="req-h">
+  <div class="modal-box">
+    <span class="eyebrow">Request an Episode</span>
+    <h3 id="req-h">What would you like asked?</h3>
+    <p class="intro">Episodes here haven't been made yet, and where this goes next isn't decided. If there's a question you want put to this viewpoint — honestly, and without a conclusion built into it — it can shape what gets recorded.</p>
+    <form id="req-form">
+      <div class="field">
+        <label for="req-point">The point on the map</label>
+        <select id="req-point" name="entry_point"></select>
+      </div>
+      <div class="field">
+        <label for="req-q">Your question</label>
+        <textarea id="req-q" name="question" required
+          placeholder="What would you like asked about this viewpoint?"></textarea>
+      </div>
+      <div class="field">
+        <label for="req-name">Name <span class="opt">— optional</span></label>
+        <input id="req-name" name="name" type="text" autocomplete="name">
+      </div>
+      <div class="field">
+        <label for="req-email">Email <span class="opt">— optional, only if you'd like a reply</span></label>
+        <input id="req-email" name="email" type="email" autocomplete="email">
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-ghost" id="req-cancel">Cancel</button>
+        <button type="submit" class="btn-solid" id="req-send">Send Request</button>
+      </div>
+      <div class="form-msg" id="req-msg" hidden></div>
+    </form>
+  </div>
+</div>
+
 <script>
 "use strict";
 
@@ -238,126 +322,123 @@
    road list automatically. Angles are spread evenly; radii were solved
    to keep labels from colliding at any rotation.
    ======================================================================= */
+/* Each lede states what the tradition holds, in its own terms. No comparisons,
+   no verdicts — a listener standing at any of these points should recognise
+   themselves and find nothing here arguing with them. */
 const NODES = [
   { id:'still-asking', label:'Still Asking', r:2.55, core:true,
-    lede:"You don't know. You've stopped pretending you do, and you're no longer sure that's a loss. This is where the host stands — not at the centre of the map, because nothing is, but out here on the rim with everyone else." },
+    lede:"The position that no person can know with certainty what is ultimately true, and that this is worth saying plainly rather than working around. One conviction is held without qualification: the question stays open this side of death. Everything else is held loosely, and revised when something truer turns up. This is where the host stands." },
   { id:'christian', label:'Christian', r:1.10,
-    lede:"You were handed a faith, and some of it still holds. This is the tradition the show comes from and the one it questions hardest — because you don't get to interrogate someone else's house before your own." },
+    lede:"Christians hold that God became human in Jesus of Nazareth, who taught, was crucified, and rose from the dead; that his life reveals God's character; and that people are reconciled to God through him. Asked which commandment was greatest, Jesus named two: love God, and love your neighbour as yourself." },
   { id:'muslim', label:'Muslim', r:2.75,
-    lede:"Ninety-nine names, and the first two are mercy and mercy again. If a tradition opens every single act with compassion, that belongs on the map — not as a footnote to somebody else's story." },
+    lede:"Muslims hold that God is one, without partner or image, and that Muhammad is the final prophet in a line including Abraham, Moses and Jesus. The Qur'an is received as God's own speech. Practice rests on five pillars: declaration of faith, prayer, almsgiving, fasting in Ramadan, and pilgrimage. Nearly every chapter opens by naming God the Merciful, the Compassionate." },
   { id:'jewish', label:'Jewish', r:2.35,
-    lede:"The older root. Asked what mattered most, Hillel answered with what you don't do to your neighbour, and called the rest commentary. Christianity's central claim is a quotation, not an invention." },
+    lede:"Judaism holds that God is one and entered into covenant with Israel, given form in the Torah and worked out across generations of interpretation. Study, questioning and argument are themselves acts of faith. Asked to summarise the whole Torah, Hillel answered: what is hateful to you, do not do to your neighbour — the rest is commentary." },
   { id:'buddhist', label:'Buddhist', r:2.55,
-    lede:"No god required, and still it arrives at the same instruction: undo the self, attend to suffering that isn't yours. That it gets there by another road is exactly the point." },
+    lede:"Buddhism begins with four observations: that life contains suffering, that suffering arises from craving and attachment, that it can cease, and that a path leads there. No creator god is required. Practice centres on meditation, ethical conduct, and the deliberate cultivation of compassion for all beings." },
   { id:'hindu', label:'Hindu', r:1.75,
-    lede:"The divine takes a body and walks among people. Long before Bethlehem, that story was already being told — which is either a problem for the doctrine or an opening in it." },
+    lede:"Hindu traditions hold that a single ultimate reality, Brahman, underlies all things, and that the self participates in it. Action carries consequence across lifetimes until liberation. The divine is approached through many names and forms, and is understood to have taken human form at times to restore righteousness." },
   { id:'sikh', label:'Sikh', r:2.35,
-    lede:"One God, no image, and a free kitchen at every door where anyone may sit — no rank, no test of belief. A theology you can eat." },
+    lede:"Sikhs hold that there is one God, without form or image, present in all people, and that every human being is equal regardless of caste, gender or creed. Practice centres on honest work, remembrance of God's name, and sharing with others — expressed in the langar, a free kitchen open to anyone who comes." },
   { id:'science', label:'Science', r:1.35,
-    lede:"You want evidence, and you're not apologising for it. Neither is this show — 'how can you know?' is a scientific question before it's a spiritual one. Same instinct, different room." },
+    lede:"The scientific view holds that claims about the world should be tested against evidence, that findings remain provisional and open to revision, and that a claim which cannot in principle be shown wrong is not yet a scientific claim. It makes no assertion of its own about meaning or purpose." },
   { id:'simulation', label:'The Matrix', r:2.55,
-    lede:"What if what you're seeing isn't it. Every mystic in every tradition has said some version of that sentence, and now the culture says it in code. New vocabulary, old suspicion." },
+    lede:"The view that the reality we perceive may not be the underlying one — framed variously as a simulation, as a model constructed by the brain, or as the older intuition that appearances conceal something truer. It is a claim about the reliability of perception rather than a claim about God." },
 
   { id:'yoga', label:'Yoga', r:2.35,
-    lede:"The word means union. Long before it was a class with a mat, it was a discipline for quieting a mind enough to notice what's underneath it — and the church that calls it dangerous has its own long tradition of kneeling, fasting and posture." },
+    lede:"Yoga is a discipline from the Indian traditions whose name means union. Classically it has eight limbs — ethical restraints, personal observances, posture, breath regulation, withdrawal of the senses, concentration, meditation and absorption — directed at stilling the movements of the mind." },
   { id:'chakras', label:'Chakras', r:2.35,
-    lede:"A map of the body drawn from the inside — centres of gathering and blockage, described the same way by people who never met. Whether it's anatomy or metaphor is a real question. That something is being described is not." },
+    lede:"In the tantric and yogic traditions, chakras are centres arranged along the spine through which prana, or life energy, is said to move. Each is associated with particular functions and qualities. Practices of posture, breath and visualisation are used to clear and balance them." },
   { id:'mantra', label:'Mantra & Chant', r:1.10,
-    lede:"Sanskrit syllables repeated until they stop being words and become something you're inside of. Anyone who has prayed a rosary, sung a hymn to exhaustion, or repeated the Jesus Prayer already knows this room by another name." },
+    lede:"A mantra is a sound, syllable or phrase repeated aloud or silently. In the Hindu, Buddhist and Sikh traditions, the repetition is held to steady attention and to carry effect through the sound itself, not only through its meaning. Sanskrit and Gurmukhi chant traditions have preserved specific sounds across many centuries." },
   { id:'energy', label:'Energy Fields', r:2.75,
-    lede:"The sense that something moves between people and places that we don't yet have instruments precise enough to name. Easy to sell badly, easy to dismiss cheaply — and neither of those is the same as looking honestly." },
+    lede:"The view that living beings generate and exchange subtle fields not fully accounted for by current measurement. Older traditions name this prana, qi, or life force; contemporary research studies related claims under names such as the biofield. Associated practices include reiki, qigong and various forms of hands-on healing." },
 
   { id:'taoism', label:'Taoism', r:1.55,
-    lede:"Stop forcing and it arrives. Water beats stone by yielding. Of every tradition on this map, this one is closest to admitting up front that the thing it names cannot be named." },
+    lede:"Taoism holds that there is a natural order — the Tao — which precedes and exceeds naming, and that life goes best when lived in accordance with it rather than in struggle against it. Its central practice is wu wei, effortless action or non-forcing. The Tao Te Ching opens by saying that the Tao which can be spoken is not the eternal Tao." },
   { id:'indigenous', label:'Indigenous', r:2.75,
-    lede:"Ancestor traditions and the sacred held in land, ceremony and story. What arriving missionaries called darkness was, in most cases, already prayer — and this is the corner of the map most often erased from conversations like this one." },
+    lede:"Indigenous traditions differ profoundly from one another and do not form a single system. Many hold that the sacred is present in land, ancestors and living relationship rather than located in a text; that knowledge is carried through ceremony, story and practice; and that people hold responsibilities to place and to the generations who follow." },
   { id:'recovery', label:'Recovery', r:2.75,
-    lede:"\"A higher power as you understand him\" — arguably the most widely practised non-doctrinal spirituality in modern life. Confession, amends and surrender, stripped of everything except what actually keeps people alive." },
+    lede:"The twelve-step tradition holds that certain conditions cannot be overcome by will alone, and that recovery begins by admitting this and turning to a higher power — deliberately left for each person to define. The steps proceed through honest inventory, admission of wrongs, making amends, and helping others in turn." },
   { id:'humanist', label:'Humanist', r:1.35,
-    lede:"Love with no god behind it at all. If the thread this show is pulling holds everywhere, it has to hold here too — which makes this the hardest and fairest test of the whole premise." },
+    lede:"Humanism holds that meaning and morality are human responsibilities, arrived at through reason, evidence and compassion, without reference to a deity or an afterlife. Ethical obligation is grounded in the wellbeing of people and other sentient creatures in the life we have." },
 ];
 // Even angular spacing, assigned in list order.
 NODES.forEach((n,i)=> n.angle = i*360/NODES.length);
 
-/* Roads carry the shared thread — the show's premise made literal. */
+/* Each road names something the two points genuinely hold in common —
+   described, not judged, and not ranked against each other. */
 const ROADS = [
-  ['still-asking','christian',  "How can you know? — asked from the inside"],
-  ['still-asking','muslim',     "Submission begins with admitting you are not God"],
-  ['still-asking','jewish',     "A tradition that argues with God and calls it faith"],
-  ['still-asking','buddhist',   "Test it yourself; believe nothing on authority"],
-  ['still-asking','hindu',      "Many names, one thing being named"],
-  ['still-asking','sikh',       "Truth is high; higher still is truthful living"],
-  ['still-asking','science',    "The willingness to be wrong is the method"],
-  ['still-asking','simulation', "Certainty is the first thing to distrust"],
-  ['still-asking','taoism',     "The Tao that can be named is not the Tao"],
-  ['still-asking','recovery',   "A higher power as you understand him"],
-  ['still-asking','humanist',   "No god required to love your neighbour"],
-  ['still-asking','indigenous', "The land was teaching before anyone wrote it down"],
+  ['still-asking','christian',  "\"Now we see through a glass, darkly\" — knowledge described as partial"],
+  ['still-asking','muslim',     "God described as exceeding full human comprehension"],
+  ['still-asking','jewish',     "A tradition that preserves the argument alongside the answer"],
+  ['still-asking','buddhist',   "The Kalama Sutta: examine a teaching yourself before accepting it"],
+  ['still-asking','hindu',      "\"Truth is one; the wise call it by many names\""],
+  ['still-asking','sikh',       "\"Truth is high; higher still is truthful living\""],
+  ['still-asking','science',    "Conclusions held provisionally and open to revision"],
+  ['still-asking','simulation', "Perception treated as incomplete evidence about reality"],
+  ['still-asking','taoism',     "\"The Tao that can be spoken is not the eternal Tao\""],
+  ['still-asking','recovery',   "\"A higher power as we understood him\""],
+  ['still-asking','humanist',   "Moral commitment held without metaphysical certainty"],
+  ['still-asking','indigenous', "Knowledge understood as relationship rather than possession"],
 
-  ['christian','jewish',        "Love your neighbour as yourself — quoted, not coined"],
-  ['christian','muslim',        "Mercy arrives before judgment"],
-  ['christian','buddhist',      "Die to the self and you will find it"],
-  ['christian','hindu',         "The divine puts on a body"],
-  ['christian','mantra',        "Repetition until the words stop being words"],
-  ['christian','yoga',          "The body as a place of prayer, not a problem"],
-  ['christian','recovery',      "Confession, amends, surrender — without the doctrine"],
-  ['christian','indigenous',    "What the missionaries called darkness was already prayer"],
-  ['christian','humanist',      "The hardest test of the premise"],
+  ['christian','jewish',        "\"Love your neighbour as yourself\" — Leviticus 19:18, quoted by Jesus"],
+  ['christian','muslim',        "Jesus honoured in both, as Messiah and as prophet"],
+  ['christian','buddhist',      "Release from the self as the condition for compassion"],
+  ['christian','hindu',         "The divine described as taking human form"],
+  ['christian','mantra',        "Repeated prayer: the rosary, the Jesus Prayer, japa"],
+  ['christian','yoga',          "Posture, breath and fasting practised as devotion"],
+  ['christian','recovery',      "Confession, amends and surrender as regular practice"],
+  ['christian','indigenous',    "The sacred encountered in place and in gathered community"],
+  ['christian','humanist',      "\"Love your neighbour\" as a shared obligation"],
 
-  ['jewish','muslim',           "One God, and no image of him"],
-  ['muslim','sikh',             "No image, no priest, no rank at the door"],
-  ['muslim','mantra',           "The name of God repeated until it steadies you"],
-  ['buddhist','sikh',           "Serve the stranger before you are asked"],
-  ['buddhist','science',        "Observe first; believe after"],
-  ['buddhist','taoism',         "Stop striving and it arrives"],
-  ['buddhist','mantra',         "Sound as a way to quiet the self"],
-  ['buddhist','recovery',       "Powerlessness as the first true step"],
-  ['buddhist','humanist',       "Ethics that need no heaven"],
-  ['hindu','buddhist',          "The self you defend is the thing in the way"],
-  ['hindu','yoga',              "The practice came out of the philosophy"],
-  ['hindu','chakras',           "Where the map of the body was first drawn"],
-  ['hindu','mantra',            "Sanskrit older than every doctrine built on it"],
+  ['jewish','muslim',           "One God, no image; law as a way of daily life"],
+  ['muslim','sikh',             "One God without form; equality of all at worship"],
+  ['muslim','mantra',           "Dhikr — the names of God repeated as practice"],
+  ['buddhist','sikh',           "Service to others offered without condition"],
+  ['buddhist','science',        "Direct observation as the test of a claim"],
+  ['buddhist','taoism',         "Non-attachment, and action without forcing"],
+  ['buddhist','mantra',         "Chant used to steady and focus attention"],
+  ['buddhist','recovery',       "Craving identified as a root of suffering"],
+  ['buddhist','humanist',       "An ethics set out without a creator god"],
+  ['hindu','buddhist',          "Karma, rebirth, and liberation from the cycle"],
+  ['hindu','yoga',              "The philosophy the practice comes from"],
+  ['hindu','chakras',           "The subtle body as described in the tantric texts"],
+  ['hindu','mantra',            "Sanskrit syllables preserved through recitation"],
 
-  ['yoga','chakras',            "The map the practice assumes"],
-  ['yoga','mantra',             "Breath, posture, sound — one discipline, not three"],
-  ['chakras','energy',          "Something moving through the body the body doesn't explain"],
-  ['chakras','science',         "Unmeasured is not unreal — and is not proof either"],
-  ['energy','science',          "The instruments keep getting better"],
-  ['energy','indigenous',       "Older names for the same current"],
-  ['energy','simulation',       "What you perceive is a model, not the thing"],
-  ['science','simulation',      "Reality as information, all the way down"],
-  ['science','humanist',        "Evidence as the only authority"],
-  ['taoism','indigenous',       "Live with the land, not against it"],
-  ['taoism','christian',        "The last shall be first; water finds the low place"],
-  ['recovery','humanist',       "It works whether or not you believe in it"],
+  ['yoga','chakras',            "The subtle body the practice works upon"],
+  ['yoga','mantra',             "Breath, posture and sound as a single discipline"],
+  ['chakras','energy',          "Prana: a life force described as moving through the body"],
+  ['chakras','science',         "Claims about the body that current instruments do not measure"],
+  ['energy','science',          "Biofield research: attempts to measure what has long been described"],
+  ['energy','indigenous',       "Life force named across traditions — qi, prana, mana"],
+  ['energy','simulation',       "Reality proposed to contain more than the senses report"],
+  ['science','simulation',      "Reality modelled as information"],
+  ['science','humanist',        "Evidence and reason as the basis for claims"],
+  ['taoism','indigenous',       "Living in accordance with the natural order"],
+  ['taoism','christian',        "Strength described through yielding and lowliness"],
+  ['recovery','humanist',       "A practice that functions without requiring belief"],
 ];
 
+/* Only what actually exists. Nothing is announced before it's known. */
 const EPISODES = {
   'still-asking':[
     {n:'01', t:'Start Here — The Opening Credo', s:'Where I stand today', status:'Next Up', href:'index.html#start'},
     {n:'02', t:'The Crack in the Light', s:'The moment that started all of this', status:'Coming'},
-    {n:'03', t:'How I Got Here', s:'From certainty to this credo', status:'Coming'},
   ],
-  'christian':[
-    {n:'04', t:'Closer to Home', s:'Testing "let live" on the people closest to it', status:'Coming'},
-    {n:'—',  t:'"I Am the Way"', s:'The verse most used to close the door', status:'Planned'},
-  ],
-  'muslim':[{n:'—',t:'The Merciful, The Compassionate', s:'Opening every act with mercy', status:'Planned'}],
-  'jewish':[{n:'—',t:'The Rest Is Commentary', s:'Hillel, and the sentence Jesus quoted', status:'Planned'}],
-  'buddhist':[{n:'—',t:'No Self, No Sword', s:'Arriving at love without a god', status:'Planned'}],
-  'hindu':[{n:'—',t:'The God Who Took a Body', s:'Avatar and incarnation', status:'Planned'}],
-  'sikh':[{n:'—',t:'The Free Kitchen', s:'A theology you can eat', status:'Planned'}],
-  'science':[{n:'—',t:'How Can You Know?', s:'Doubt as method, not enemy', status:'Planned'}],
-  'simulation':[{n:'—',t:'What If This Isn’t It', s:'Old mysticism in new code', status:'Planned'}],
-  'yoga':[{n:'—',t:'The Word Means Union', s:'What the church got afraid of', status:'Planned'}],
-  'chakras':[{n:'—',t:'A Map Drawn From Inside', s:'Anatomy, metaphor, or both', status:'Planned'}],
-  'mantra':[{n:'—',t:'Until the Words Stop Being Words', s:'Chant, rosary, and the Jesus Prayer', status:'Planned'}],
-  'energy':[{n:'—',t:'Between Us', s:'Taking it seriously without selling it', status:'Planned'}],
-  'taoism':[{n:'—',t:'The Watercourse Way', s:'The tradition that admits it cannot name it', status:'Planned'}],
-  'indigenous':[{n:'—',t:'Already Prayer', s:'What the missionaries walked into', status:'Planned'}],
-  'recovery':[{n:'—',t:'As You Understand Him', s:'The most practised spirituality nobody calls one', status:'Planned'}],
-  'humanist':[{n:'—',t:'Love Without Heaven', s:'The hardest test of the premise', status:'Planned'}],
 };
+
+/* -----------------------------------------------------------------------
+   EPISODE REQUESTS
+   Built and ready, switched off until there's somewhere for them to go.
+   To turn on: set REQUESTS_ENABLED = true and paste a form endpoint
+   (Formspree, Tally, Formspark) into REQUEST_ENDPOINT. Leaving the endpoint
+   empty falls back to composing an email to REQUEST_MAILTO instead — which
+   does publish that address on a public page, so it's off by default.
+   ----------------------------------------------------------------------- */
+const REQUESTS_ENABLED = false;
+const REQUEST_ENDPOINT = '';
+const REQUEST_MAILTO   = '';
 
 /* =======================================================================
    VIEW STATES
@@ -856,8 +937,12 @@ function selectNode(id,fromEntry){
   const eWrap=document.getElementById('p-eps');
   eWrap.innerHTML='';
   const eps=EPISODES[id]||[];
-  if(!eps.length) eWrap.innerHTML='<div class="empty">Episodes for this road are still being written.</div>';
-  else eps.forEach(ep=>{
+  if(!eps.length){
+    const e=document.createElement('div');
+    e.className='empty';
+    e.textContent='Nothing recorded here yet. Where the show goes after the first two episodes hasn’t been decided.';
+    eWrap.appendChild(e);
+  } else eps.forEach(ep=>{
     const d=document.createElement('div');
     d.className='ep';
     d.innerHTML='<div class="ep-n">'+ep.n+'</div><div style="flex:1">'+
@@ -867,6 +952,14 @@ function selectNode(id,fromEntry){
     eWrap.appendChild(d);
   });
 
+  if(REQUESTS_ENABLED){
+    const rb=document.createElement('button');
+    rb.className='req-btn';
+    rb.textContent='Request an episode from here';
+    rb.addEventListener('click',()=>openRequest(id));
+    eWrap.appendChild(rb);
+  }
+
   panel.classList.add('open');
   panel.scrollTop=0;
 }
@@ -875,6 +968,82 @@ function deselect(){
   panel.classList.remove('open');
 }
 document.getElementById('close').addEventListener('click',deselect);
+
+/* =======================================================================
+   REQUEST MODAL
+   ======================================================================= */
+const reqModal=document.getElementById('req-modal');
+const reqForm=document.getElementById('req-form');
+const reqPoint=document.getElementById('req-point');
+const reqMsg=document.getElementById('req-msg');
+let lastFocus=null;
+
+NODES.forEach(n=>{
+  const o=document.createElement('option');
+  o.value=n.label; o.textContent=n.label;
+  reqPoint.appendChild(o);
+});
+
+function openRequest(id){
+  lastFocus=document.activeElement;
+  reqPoint.value=(byId[id]||{}).label||NODES[0].label;
+  reqMsg.hidden=true; reqMsg.textContent='';
+  document.getElementById('req-send').disabled=false;
+  reqModal.hidden=false;
+  document.getElementById('req-q').focus();
+}
+function closeRequest(){
+  reqModal.hidden=true;
+  if(lastFocus) lastFocus.focus();
+}
+document.getElementById('req-cancel').addEventListener('click',closeRequest);
+reqModal.addEventListener('click',e=>{ if(e.target===reqModal) closeRequest(); });
+
+reqForm.addEventListener('submit',async e=>{
+  e.preventDefault();
+  const data={
+    entry_point: reqPoint.value,
+    question:    document.getElementById('req-q').value.trim(),
+    name:        document.getElementById('req-name').value.trim(),
+    email:       document.getElementById('req-email').value.trim(),
+    page:        location.href,
+  };
+  if(!data.question) return;
+  const send=document.getElementById('req-send');
+  send.disabled=true;
+  reqMsg.hidden=false;
+  reqMsg.textContent='Sending…';
+
+  try{
+    if(REQUEST_ENDPOINT){
+      const res=await fetch(REQUEST_ENDPOINT,{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Accept':'application/json'},
+        body:JSON.stringify(data),
+      });
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      reqMsg.textContent='Thank you — your question has been received.';
+      reqForm.reset();
+      setTimeout(closeRequest,2200);
+    } else if(REQUEST_MAILTO){
+      const body=
+        'Point on the map: '+data.entry_point+'\n\n'+
+        'Question:\n'+data.question+'\n\n'+
+        (data.name?'Name: '+data.name+'\n':'')+
+        (data.email?'Email: '+data.email+'\n':'');
+      location.href='mailto:'+REQUEST_MAILTO+
+        '?subject='+encodeURIComponent('Episode request — '+data.entry_point)+
+        '&body='+encodeURIComponent(body);
+      reqMsg.textContent='Opening your email app…';
+      setTimeout(closeRequest,1600);
+    } else {
+      throw new Error('No destination configured');
+    }
+  }catch(err){
+    send.disabled=false;
+    reqMsg.textContent='That didn’t send. Requests aren’t connected yet — please try again later.';
+  }
+});
 
 /* =======================================================================
    POINTER
@@ -918,7 +1087,10 @@ cv.addEventListener('pointerup',e=>{
 cv.addEventListener('pointercancel',()=>{dragging=false;});
 
 addEventListener('keydown',e=>{
-  if(e.key==='Escape'){ if(selected) deselect(); else if(inMap) backToThreshold(); }
+  if(e.key==='Escape'){
+    if(!reqModal.hidden){ closeRequest(); return; }
+    if(selected) deselect(); else if(inMap) backToThreshold();
+  }
   if(!inMap) return;
   if(e.key==='ArrowLeft'){rotTarget=null;rot-=0.12;}
   if(e.key==='ArrowRight'){rotTarget=null;rot+=0.12;}
