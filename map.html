@@ -87,6 +87,25 @@
     text-align:center;margin-bottom:14px;
   }
 
+  .picker-search{
+    width:min(430px,86vw);margin-bottom:16px;padding:9px 14px;
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(240,185,77,0.16);border-radius:3px;
+    color:var(--text);font-family:inherit;font-size:13px;font-weight:300;
+    text-align:center;
+  }
+  .picker-search::placeholder{color:rgba(139,152,182,0.55);}
+  .picker-search:focus{
+    outline:none;border-color:rgba(240,185,77,0.45);
+    background:rgba(255,255,255,0.06);
+  }
+  .picker-empty{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-family:'Cormorant Garamond',serif;font-size:19px;font-style:italic;
+    color:rgba(139,152,182,0.6);pointer-events:none;text-align:center;padding:0 20px;
+  }
+  .picker-empty[hidden]{display:none;}
+
   /* the picker */
   /* --ph drives both the window height and the top/bottom padding, so item 0
      always lands dead centre at scrollTop 0 whatever the height. */
@@ -153,6 +172,12 @@
     font-size:10.5px;letter-spacing:0.22em;text-transform:uppercase;
     color:rgba(139,152,182,0.72);
   }
+  .maptools .k2{
+    margin-top:9px;font-family:'Cormorant Garamond',serif;font-style:italic;
+    font-size:13.5px;color:rgba(139,152,182,0.5);
+    max-width:34em;margin-left:auto;margin-right:auto;padding:0 20px;
+  }
+  @media (max-width:720px){ .maptools .k2{display:none;} }
 
   /* ---------- detail panel ---------- */
   .panel{
@@ -266,9 +291,13 @@
   <div class="q-title">From what point on the map<br>would you like to start?</div>
   <div class="q-sub">There is no wrong answer, and no centre. Start where you already stand.</div>
 
+  <input class="picker-search" id="picker-search" type="search" autocomplete="off"
+         placeholder="or type what you'd call yourself" aria-label="Search the entry points">
+
   <div class="picker">
     <div class="picker-rule top"></div>
     <div class="picker-rule bot"></div>
+    <div class="picker-empty" id="picker-empty" hidden>Nothing on the map by that name — yet.</div>
     <div class="picker-scroll" id="picker" tabindex="0" role="listbox" aria-label="Choose your starting point">
       <div class="pad"></div>
       <!-- items injected -->
@@ -283,6 +312,7 @@
 <!-- ============ MAP TOOLS ============ -->
 <div class="maptools" id="maptools">
   <div class="k">Drag to turn the world · Click any marker</div>
+  <div class="k2">Nothing here is closer to the centre than anything else. The distances drift; there is no order.</div>
 </div>
 
 <!-- ============ PANEL ============ -->
@@ -345,108 +375,116 @@
    no verdicts — a listener standing at any of these points should recognise
    themselves and find nothing here arguing with them. */
 const NODES = [
-  { id:'still-asking', label:'Still Asking', r:1.35, core:true,
-    lede:"The position that no person can know with certainty what is ultimately true, and that this is worth saying plainly rather than working around. One conviction is held without qualification: the question stays open this side of death. Everything else is held loosely, and revised when something truer turns up. This is where the host stands." },
-  { id:'christian', label:'Christian', r:2.55,
-    lede:"Christians hold that God became human in Jesus of Nazareth, who taught, was crucified, and rose from the dead; that his life reveals God's character; and that people are reconciled to God through him. Asked which commandment was greatest, Jesus named two: love God, and love your neighbour as yourself." },
-  { id:'muslim', label:'Muslim', r:1.35,
-    lede:"Muslims hold that God is one, without partner or image, and that Muhammad is the final prophet in a line including Abraham, Moses and Jesus. The Qur'an is received as God's own speech. Practice rests on five pillars: declaration of faith, prayer, almsgiving, fasting in Ramadan, and pilgrimage. Nearly every chapter opens by naming God the Merciful, the Compassionate." },
-  { id:'jewish', label:'Jewish', r:2.75,
-    lede:"Judaism holds that God is one and entered into covenant with Israel, given form in the Torah and worked out across generations of interpretation. Study, questioning and argument are themselves acts of faith. Asked to summarise the whole Torah, Hillel answered: what is hateful to you, do not do to your neighbour — the rest is commentary." },
-  { id:'buddhist', label:'Buddhist', r:2.35,
-    lede:"Buddhism begins with four observations: that life contains suffering, that suffering arises from craving and attachment, that it can cease, and that a path leads there. No creator god is required. Practice centres on meditation, ethical conduct, and the deliberate cultivation of compassion for all beings." },
-  { id:'hindu', label:'Hindu', r:1.35,
-    lede:"Hindu traditions hold that a single ultimate reality, Brahman, underlies all things, and that the self participates in it. Action carries consequence across lifetimes until liberation. The divine is approached through many names and forms, and is understood to have taken human form at times to restore righteousness." },
-  { id:'sikh', label:'Sikh', r:2.15,
-    lede:"Sikhs hold that there is one God, without form or image, present in all people, and that every human being is equal regardless of caste, gender or creed. Practice centres on honest work, remembrance of God's name, and sharing with others — expressed in the langar, a free kitchen open to anyone who comes." },
-  { id:'science', label:'Science', r:2.35,
-    lede:"The scientific view holds that claims about the world should be tested against evidence, that findings remain provisional and open to revision, and that a claim which cannot in principle be shown wrong is not yet a scientific claim. It makes no assertion of its own about meaning or purpose." },
-  { id:'simulation', label:'The Matrix', r:1.1,
-    lede:"The view that the reality we perceive may not be the underlying one — framed variously as a simulation, as a model constructed by the brain, or as the older intuition that appearances conceal something truer. It is a claim about the reliability of perception rather than a claim about God." },
-
-  { id:'yoga', label:'Yoga', r:2.55,
-    lede:"Yoga is a discipline from the Indian traditions whose name means union. Classically it has eight limbs — ethical restraints, personal observances, posture, breath regulation, withdrawal of the senses, concentration, meditation and absorption — directed at stilling the movements of the mind." },
-  { id:'chakras', label:'Chakras', r:1.55,
-    lede:"In the tantric and yogic traditions, chakras are centres arranged along the spine through which prana, or life energy, is said to move. Each is associated with particular functions and qualities. Practices of posture, breath and visualisation are used to clear and balance them." },
-  { id:'mantra', label:'Mantra & Chant', r:2.75,
-    lede:"A mantra is a sound, syllable or phrase repeated aloud or silently. In the Hindu, Buddhist and Sikh traditions, the repetition is held to steady attention and to carry effect through the sound itself, not only through its meaning. Sanskrit and Gurmukhi chant traditions have preserved specific sounds across many centuries." },
-  { id:'energy', label:'Energy Fields', r:1.35,
-    lede:"The view that living beings generate and exchange subtle fields not fully accounted for by current measurement. Older traditions name this prana, qi, or life force; contemporary research studies related claims under names such as the biofield. Associated practices include reiki, qigong and various forms of hands-on healing." },
-
-  { id:'taoism', label:'Taoism', r:2.75,
-    lede:"Taoism holds that there is a natural order — the Tao — which precedes and exceeds naming, and that life goes best when lived in accordance with it rather than in struggle against it. Its central practice is wu wei, effortless action or non-forcing. The Tao Te Ching opens by saying that the Tao which can be spoken is not the eternal Tao." },
-  { id:'indigenous', label:'Indigenous', r:2.75,
-    lede:"Indigenous traditions differ profoundly from one another and do not form a single system. Many hold that the sacred is present in land, ancestors and living relationship rather than located in a text; that knowledge is carried through ceremony, story and practice; and that people hold responsibilities to place and to the generations who follow." },
-  { id:'recovery', label:'Recovery', r:1.1,
-    lede:"The twelve-step tradition holds that certain conditions cannot be overcome by will alone, and that recovery begins by admitting this and turning to a higher power — deliberately left for each person to define. The steps proceed through honest inventory, admission of wrongs, making amends, and helping others in turn." },
-  { id:'humanist', label:'Humanist', r:2.75,
-    lede:"Humanism holds that meaning and morality are human responsibilities, arrived at through reason, evidence and compassion, without reference to a deity or an afterlife. Ethical obligation is grounded in the wellbeing of people and other sentient creatures in the life we have." },
-  { id:'atheist', label:'Atheist', r:2.55,
-    lede:"Atheism is the absence of belief in any god. It is an answer to one question rather than a philosophy of life, and atheists differ among themselves about meaning, morality and death as widely as believers do. Some arrive here through evidence, some through suffering, and some by simply never having been persuaded in the first place." },
+  { id:'still-asking', label:'Still Asking', r:1.75, core:true,
+    lede:'The position that no person can know with certainty what is ultimately true, and that this is worth saying plainly rather than working around. One conviction is held without qualification: the question stays open this side of death. Everything else is held loosely, and revised when something truer turns up. This is where the host stands.' },
+  { id:'christian', label:'Christian', r:2.75,
+    lede:'Christians hold that God became human in Jesus of Nazareth, who taught, was crucified, and rose from the dead; that his life reveals God\'s character; and that people are reconciled to God through him. Asked which commandment was greatest, Jesus named two: love God, and love your neighbour as yourself.' },
+  { id:'muslim', label:'Muslim', r:2.35,
+    lede:'Muslims hold that God is one, without partner or image, and that Muhammad is the final prophet in a line including Abraham, Moses and Jesus. The Qur\'an is received as God\'s own speech. Practice rests on five pillars: declaration of faith, prayer, almsgiving, fasting in Ramadan, and pilgrimage. Nearly every chapter opens by naming God the Merciful, the Compassionate.' },
+  { id:'jewish', label:'Jewish', r:2.55,
+    lede:'Judaism holds that God is one and entered into covenant with Israel, given form in the Torah and worked out across generations of interpretation. Study, questioning and argument are themselves acts of faith. Asked to summarise the whole Torah, Hillel answered: what is hateful to you, do not do to your neighbour — the rest is commentary.' },
+  { id:'buddhist', label:'Buddhist', r:2.55,
+    lede:'Buddhism begins with four observations: that life contains suffering, that suffering arises from craving and attachment, that it can cease, and that a path leads there. No creator god is required. Practice centres on meditation, ethical conduct, and the deliberate cultivation of compassion for all beings.' },
+  { id:'hindu', label:'Hindu', r:1.10,
+    lede:'Hindu traditions hold that a single ultimate reality, Brahman, underlies all things, and that the self participates in it. Action carries consequence across lifetimes until liberation. The divine is approached through many names and forms, and is understood to have taken human form at times to restore righteousness.' },
+  { id:'sikh', label:'Sikh', r:2.35,
+    lede:'Sikhs hold that there is one God, without form or image, present in all people, and that every human being is equal regardless of caste, gender or creed. Practice centres on honest work, remembrance of God\'s name, and sharing with others — expressed in the langar, a free kitchen open to anyone who comes.' },
+  { id:'science', label:'Science', r:2.55,
+    lede:'The scientific view holds that claims about the world should be tested against evidence, that findings remain provisional and open to revision, and that a claim which cannot in principle be shown wrong is not yet a scientific claim. It makes no assertion of its own about meaning or purpose.' },
+  { id:'simulation', label:'The Matrix', r:2.75,
+    lede:'The view that the reality we perceive may not be the underlying one — framed variously as a simulation, as a model constructed by the brain, or as the older intuition that appearances conceal something truer. It is a claim about the reliability of perception rather than a claim about God.' },
+  { id:'yoga', label:'Yoga', r:2.75,
+    lede:'Yoga is a discipline from the Indian traditions whose name means union. Classically it has eight limbs — ethical restraints, personal observances, posture, breath regulation, withdrawal of the senses, concentration, meditation and absorption — directed at stilling the movements of the mind.' },
+  { id:'chakras', label:'Chakras', r:2.15,
+    lede:'In the tantric and yogic traditions, chakras are centres arranged along the spine through which prana, or life energy, is said to move. Each is associated with particular functions and qualities. Practices of posture, breath and visualisation are used to clear and balance them.' },
+  { id:'mantra', label:'Mantra & Chant', r:2.35,
+    lede:'A mantra is a sound, syllable or phrase repeated aloud or silently. In the Hindu, Buddhist and Sikh traditions, the repetition is held to steady attention and to carry effect through the sound itself, not only through its meaning. Sanskrit and Gurmukhi chant traditions have preserved specific sounds across many centuries.' },
+  { id:'energy', label:'Energy Fields', r:2.35,
+    lede:'The view that living beings generate and exchange subtle fields not fully accounted for by current measurement. Older traditions name this prana, qi, or life force; contemporary research studies related claims under names such as the biofield. Associated practices include reiki, qigong and various forms of hands-on healing.' },
+  { id:'taoism', label:'Taoism', r:2.15,
+    lede:'Taoism holds that there is a natural order — the Tao — which precedes and exceeds naming, and that life goes best when lived in accordance with it rather than in struggle against it. Its central practice is wu wei, effortless action or non-forcing. The Tao Te Ching opens by saying that the Tao which can be spoken is not the eternal Tao.' },
+  { id:'indigenous', label:'Indigenous', r:2.15,
+    lede:'Indigenous traditions differ profoundly from one another and do not form a single system. Many hold that the sacred is present in land, ancestors and living relationship rather than located in a text; that knowledge is carried through ceremony, story and practice; and that people hold responsibilities to place and to the generations who follow.' },
+  { id:'recovery', label:'Recovery', r:2.35,
+    lede:'The twelve-step tradition holds that certain conditions cannot be overcome by will alone, and that recovery begins by admitting this and turning to a higher power — deliberately left for each person to define. The steps proceed through honest inventory, admission of wrongs, making amends, and helping others in turn.' },
+  { id:'humanist', label:'Humanist', r:1.75,
+    lede:'Humanism holds that meaning and morality are human responsibilities, arrived at through reason, evidence and compassion, without reference to a deity or an afterlife. Ethical obligation is grounded in the wellbeing of people and other sentient creatures in the life we have.' },
+  { id:'atheist', label:'Atheist', r:2.75,
+    lede:'Atheism is the absence of belief in any god. It is an answer to one question rather than a philosophy of life, and atheists differ among themselves about meaning, morality and death as widely as believers do. Some arrive here through evidence, some through suffering, and some by simply never having been persuaded in the first place.' },
+  { id:'bahai', label:'Bahá’í', r:1.95,
+    lede:'The Bahá’í Faith holds that there is one God who has sent a succession of messengers — among them Abraham, Krishna, Moses, the Buddha, Jesus, Muhammad and, most recently, Bahá’u’lláh — each suited to the age that received them. It teaches the essential oneness of religion and of humanity, the equality of women and men, and that religion and reason must agree.' },
+  { id:'lds', label:'Latter-day Saint', r:2.75,
+    lede:'The Church of Jesus Christ of Latter-day Saints holds that Christ\'s original church was lost and then restored through Joseph Smith in the nineteenth century, and that revelation did not end with the New Testament. The Book of Mormon is received as scripture alongside the Bible. Families are understood to continue beyond death.' },
 ];
 // Even angular spacing, assigned in list order.
 NODES.forEach((n,i)=> n.angle = i*360/NODES.length);
 
-/* Each road names something the two points genuinely hold in common —
-   described, not judged, and not ranked against each other. */
+/* Every thread is a question, not a verdict. Where a fact is checkable it is
+   stated and the open part is asked — the citation isn't turned into a doubt. */
 const ROADS = [
-  ['still-asking','christian',  "\"Now we see through a glass, darkly\" — knowledge described as partial"],
-  ['still-asking','muslim',     "God described as exceeding full human comprehension"],
-  ['still-asking','jewish',     "A tradition that preserves the argument alongside the answer"],
-  ['still-asking','buddhist',   "The Kalama Sutta: examine a teaching yourself before accepting it"],
-  ['still-asking','hindu',      "\"Truth is one; the wise call it by many names\""],
-  ['still-asking','sikh',       "\"Truth is high; higher still is truthful living\""],
-  ['still-asking','science',    "Conclusions held provisionally and open to revision"],
-  ['still-asking','simulation', "Perception treated as incomplete evidence about reality"],
-  ['still-asking','taoism',     "\"The Tao that can be spoken is not the eternal Tao\""],
-  ['still-asking','recovery',   "\"A higher power as we understood him\""],
-  ['still-asking','humanist',   "Moral commitment held without metaphysical certainty"],
-  ['still-asking','indigenous', "Knowledge understood as relationship rather than possession"],
-
-  ['christian','jewish',        "\"Love your neighbour as yourself\" — Leviticus 19:18, quoted by Jesus"],
-  ['christian','muslim',        "Jesus honoured in both, as Messiah and as prophet"],
-  ['christian','buddhist',      "Release from the self as the condition for compassion"],
-  ['christian','hindu',         "The divine described as taking human form"],
-  ['christian','mantra',        "Repeated prayer: the rosary, the Jesus Prayer, japa"],
-  ['christian','yoga',          "Posture, breath and fasting practised as devotion"],
-  ['christian','recovery',      "Confession, amends and surrender as regular practice"],
-  ['christian','indigenous',    "The sacred encountered in place and in gathered community"],
-  ['christian','humanist',      "\"Love your neighbour\" as a shared obligation"],
-
-  ['jewish','muslim',           "One God, no image; law as a way of daily life"],
-  ['muslim','sikh',             "One God without form; equality of all at worship"],
-  ['muslim','mantra',           "Dhikr — the names of God repeated as practice"],
-  ['buddhist','sikh',           "Service to others offered without condition"],
-  ['buddhist','science',        "Direct observation as the test of a claim"],
-  ['buddhist','taoism',         "Non-attachment, and action without forcing"],
-  ['buddhist','mantra',         "Chant used to steady and focus attention"],
-  ['buddhist','recovery',       "Craving identified as a root of suffering"],
-  ['buddhist','humanist',       "An ethics set out without a creator god"],
-  ['hindu','buddhist',          "Karma, rebirth, and liberation from the cycle"],
-  ['hindu','yoga',              "The philosophy the practice comes from"],
-  ['hindu','chakras',           "The subtle body as described in the tantric texts"],
-  ['hindu','mantra',            "Sanskrit syllables preserved through recitation"],
-
-  ['yoga','chakras',            "The subtle body the practice works upon"],
-  ['yoga','mantra',             "Breath, posture and sound as a single discipline"],
-  ['chakras','energy',          "Prana: a life force described as moving through the body"],
-  ['chakras','science',         "Claims about the body that current instruments do not measure"],
-  ['energy','science',          "Biofield research: attempts to measure what has long been described"],
-  ['energy','indigenous',       "Life force named across traditions — qi, prana, mana"],
-  ['energy','simulation',       "Reality proposed to contain more than the senses report"],
-  ['science','simulation',      "Reality modelled as information"],
-  ['science','humanist',        "Evidence and reason as the basis for claims"],
-  ['taoism','indigenous',       "Living in accordance with the natural order"],
-  ['taoism','christian',        "Strength described through yielding and lowliness"],
-  ['recovery','humanist',       "A practice that functions without requiring belief"],
-
-  ['atheist','still-asking',  "Neither will affirm what it has not been shown"],
-  ['atheist','humanist',      "Without a god, the obligation is to each other"],
-  ['atheist','science',       "A claim carries the burden of its own evidence"],
-  ['atheist','buddhist',      "A practice that asks for no creator"],
-  ['atheist','christian',     "The problem of suffering, taken seriously on both sides"],
-  ['atheist','recovery',      "A higher power that need not be a deity"],
-  ['atheist','simulation',    "Doubt that the story explains itself"],
+  ['still-asking','christian', "“Now we see through a glass, darkly.” How much did Paul mean by that?"],
+  ['still-asking','muslim', "If God exceeds all comprehension, what is left to be certain about?"],
+  ['still-asking','jewish', "This tradition keeps the argument alongside the answer. Why preserve both?"],
+  ['still-asking','buddhist', "The Kalama Sutta says test it yourself. How far does that permission go?"],
+  ['still-asking','hindu', "“Truth is one; the wise call it by many names.” One truth, or many?"],
+  ['still-asking','sikh', "“Truth is high; higher still is truthful living.” Which comes first?"],
+  ['still-asking','science', "If every conclusion stays provisional, what do you build a life on?"],
+  ['still-asking','simulation', "If perception is unreliable, is doubt the only honest position left?"],
+  ['still-asking','taoism', "“The Tao that can be spoken is not the eternal Tao.” So why speak?"],
+  ['still-asking','recovery', "“A higher power as we understood him.” How much can that phrase carry?"],
+  ['still-asking','humanist', "Can you commit to a moral life without being sure why it matters?"],
+  ['still-asking','indigenous', "If knowledge lives in relationship, who is qualified to hold it?"],
+  ['still-asking','atheist', "Is declining to affirm the unproven the same thing as unbelief?"],
+  ['still-asking','bahai', "If every religion points at one thing, who gets to say so?"],
+  ['still-asking','lds', "What happens to a faith built on certainty when the certainty goes?"],
+  ['christian','jewish', "Jesus quoted Leviticus 19:18. Why that verse above all the others?"],
+  ['christian','muslim', "Both honour Jesus — as risen Lord, as prophet. Where do the readings part?"],
+  ['christian','buddhist', "Both speak of losing the self. Do they mean the same self?"],
+  ['christian','hindu', "Both describe the divine taking a human body. Is that one claim or two?"],
+  ['christian','mantra', "The rosary, the Jesus Prayer, japa. What is the repetition actually doing?"],
+  ['christian','yoga', "Kneeling, fasting, breath. At what point does the body become prayer?"],
+  ['christian','recovery', "Confession, amends, surrender. Does the doctrine add to the practice?"],
+  ['christian','indigenous', "Missionaries arrived where prayer already was. What should have happened?"],
+  ['christian','humanist', "“Love your neighbour.” Does the command need a commander?"],
+  ['christian','atheist', "Suffering is the hardest question for both. Which answer is more honest?"],
+  ['christian','taoism', "“The last shall be first.” Is that water finding the low place?"],
+  ['christian','bahai', "Bahá’u’lláh named Christ one revelation among many. Can that meet John 14:6?"],
+  ['christian','lds', "Both read the same gospels. Where exactly does the reading diverge?"],
+  ['jewish','muslim', "One God, no image, law as daily life. How much is shared inheritance?"],
+  ['jewish','lds', "Both speak of covenant, a chosen people, a promised land. The same words?"],
+  ['muslim','sikh', "Both refuse any image of God. What is that refusal protecting?"],
+  ['muslim','mantra', "Dhikr repeats the names of God. Is that the same act as japa?"],
+  ['muslim','bahai', "This faith began within Islam and was cast out of it. What was the break?"],
+  ['buddhist','sikh', "Service offered without condition. Why does it appear in both?"],
+  ['buddhist','science', "Both say test it before believing it. Does Buddhism keep that promise?"],
+  ['buddhist','taoism', "Non-attachment and non-forcing. The same instinct, or two different ones?"],
+  ['buddhist','mantra', "Chant steadies attention. Is it the sound doing that, or the discipline?"],
+  ['buddhist','recovery', "Craving named as the root of suffering, twenty-five centuries apart. Coincidence?"],
+  ['buddhist','humanist', "An ethics with no creator behind it. What holds it up?"],
+  ['buddhist','atheist', "A religion that requires no god. Does that still make it one?"],
+  ['hindu','buddhist', "Karma and rebirth, shared and then disputed. What did the Buddha reject?"],
+  ['hindu','yoga', "The practice came out of this philosophy. Can it be separated from it?"],
+  ['hindu','chakras', "The subtle body, as the tantric texts describe it. Map or metaphor?"],
+  ['hindu','mantra', "Sanskrit preserved by recitation for millennia. Is the sound itself the point?"],
+  ['hindu','bahai', "This faith counts Krishna among the messengers. Would a Hindu accept the count?"],
+  ['yoga','chakras', "The practice assumes this map of the body. What if the map is wrong?"],
+  ['yoga','mantra', "Breath, posture, sound. One discipline, or three that grew together?"],
+  ['chakras','energy', "Prana, moving through the body. What would count as evidence either way?"],
+  ['chakras','science', "Instruments don’t measure it. Does that settle the question?"],
+  ['energy','science', "Biofield research tries to measure what was long described. How is it going?"],
+  ['energy','indigenous', "Qi, prana, mana. Different names for one thing, or different things?"],
+  ['energy','simulation', "Both say there is more here than the senses report. Where do they differ?"],
+  ['science','simulation', "Reality modelled as information. Is that physics, or metaphysics?"],
+  ['science','humanist', "Evidence as the only authority. Is that itself a belief?"],
+  ['science','atheist', "A claim carries its own burden of proof. Does absence of proof settle it?"],
+  ['science','bahai', "These writings require religion to agree with science. What if it doesn’t?"],
+  ['taoism','indigenous', "Living with the natural order rather than against it. What did both know?"],
+  ['recovery','humanist', "It works whether or not you believe it. What does that prove?"],
+  ['recovery','atheist', "A higher power that needn’t be a deity. Honest, or a workaround?"],
+  ['atheist','humanist', "Without a god, is the obligation to each other automatic?"],
+  ['atheist','simulation', "Both doubt the story explains itself. Do they doubt the same way?"],
+  ['bahai','lds', "Both hold revelation continued after the founding texts closed. Who decides when it stops?"],
+  ['indigenous','lds', "The Book of Mormon makes claims about the peoples of the Americas. What do those peoples say?"],
 ];
 
 /* Only what actually exists. Nothing is announced before it's known. */
@@ -550,10 +588,53 @@ function project(x,y,z){
   const f=focalPx/Z2;
   return {x:centreX+X*f, y:anchorY+Y2*f, z:Z2, f};
 }
+/* ---------------------------------------------------------------------
+   DRIFT — no fixed distance from the centre, ever.
+   The orb at the centre is love; if a marker sat permanently nearer to it
+   than another, the map would assert a hierarchy nobody intended. So every
+   radius breathes on two incommensurate periods, which never line up and
+   never repeat. Nothing settles, so nothing can be ranked.
+   --------------------------------------------------------------------- */
+const DRIFT_AMP = 0.45;
+let driftT = 0;
+NODES.forEach((n,i)=>{ n.p1 = i*2.399; n.p2 = i*4.113; });
+
+function nodeRadius(n){
+  if (reduceMotion) return n.r;
+  return n.r + DRIFT_AMP*(
+      0.6*Math.sin(driftT/41000*6.2832 + n.p1) +
+      0.4*Math.sin(driftT/67000*6.2832 + n.p2));
+}
+
 function nodePos(n){
-  const a=n.angle*Math.PI/180, r=n.r*WORLD_SCALE;
+  const a=n.angle*Math.PI/180, r=nodeRadius(n)*WORLD_SCALE;
   return {x:Math.sin(a)*r, y:0, z:Math.cos(a)*r};
 }
+
+/* Extra words that should find a marker. People search for what they call
+   themselves, which is rarely the word printed on the pin. */
+const ALIASES = {
+  'still-asking':'agnostic doubt doubting unsure questioning seeker none nothing exvangelical deconstructing',
+  'christian':'christianity catholic protestant orthodox evangelical baptist methodist pentecostal lutheran jesus church bible',
+  'muslim':'islam islamic sunni shia shiite sufi quran koran',
+  'jewish':'judaism jew jews torah talmud orthodox reform conservative hebrew',
+  'buddhist':'buddhism buddha zen theravada mahayana tibetan meditation mindfulness',
+  'hindu':'hinduism vedanta veda brahman krishna vishnu shiva bhakti',
+  'sikh':'sikhism guru nanak khalsa gurdwara punjabi',
+  'science':'scientific evidence empirical skeptic sceptic rational physics biology',
+  'simulation':'matrix simulated simulation reality perception illusion maya',
+  'yoga':'asana patanjali hatha vinyasa posture practice',
+  'chakras':'chakra subtle body kundalini energy centres centers',
+  'mantra':'chant chanting kirtan japa sanskrit sound om aum prayer beads rosary',
+  'energy':'reiki qigong chi biofield healing aura prana life force',
+  'taoism':'tao dao daoism wu wei laozi lao tzu',
+  'indigenous':'native aboriginal first nations shamanic shaman ancestral tribal land',
+  'recovery':'twelve step 12 step aa alcoholics anonymous addiction sober sobriety higher power',
+  'humanist':'humanism secular ethical nonreligious',
+  'atheist':'atheism atheistic nonbeliever unbeliever unbelief antitheist godless',
+  'bahai':'bahai bahaullah unity oneness',
+  'lds':'mormon mormonism latter day saint joseph smith book of mormon exmormon utah restoration',
+};
 /** Project with the settled map camera, ignoring the live one. */
 function projectMap(rotV,x,z,panelOpen){
   const focal=S_MAP.fk*base;
@@ -806,14 +887,18 @@ function drawNodes(time){
     ctx.beginPath(); ctx.arc(p.x, top+pw*0.5, pw*0.32,0,6.2832);
     ctx.fillStyle='#060a14'; ctx.fill();
 
-    // labels: only once we've descended, or for the picker's current choice
-    const showLabel = inMap || isSel || descent>0.35;
+    // Label only what's turned toward you. Far markers stay unlit pins and
+    // name themselves as they come round — that's perspective, not a ranking,
+    // and it's what lets the map keep growing without turning to mush.
+    const NEAR = 0.85;
+    const labelFade = Math.max(0, Math.min(1, (nf-NEAR)/0.25));
+    const showLabel = inMap ? (isSel || isHov || labelFade>0) : isSel;
     if(showLabel){
       const fs=Math.max(11,Math.min(26,base*0.0185*s*(0.7+0.3*ease(descent))));
       ctx.font=`${isSel?500:400} ${fs}px 'Cormorant Garamond', serif`;
       ctx.textAlign='center'; ctx.textBaseline='alphabetic';
       const ly=top-pw*1.6;
-      ctx.globalAlpha=alpha*(inMap?1:(isSel?1:ease(descent)));
+      ctx.globalAlpha = alpha * (inMap ? (isSel||isHov ? 1 : labelFade) : 1);
       ctx.save();
       ctx.shadowColor='rgba(2,4,10,0.95)'; ctx.shadowBlur=9;
       ctx.fillStyle=isSel?'#fff6e0':(isHov?'#ffd88a':'rgba(240,243,250,0.94)');
@@ -845,6 +930,7 @@ function drawVignette(){
 /* ---------------- loop ---------------- */
 function frame(now){
   const time=now-t0;
+  driftT = time;
   descent += (descentTarget-descent)*0.045;
   if(Math.abs(descentTarget-descent)<0.002) descent=descentTarget;
   cxOff += (cxOffTarget-cxOff)*0.08;
@@ -871,50 +957,88 @@ function frame(now){
 
 /* =======================================================================
    THRESHOLD PICKER
-   Scrolling the list turns the world. Nodes are evenly spaced in angle and
-   the list is evenly spaced in pixels, so a straight linear mapping puts
-   the active entry at the front of the disc exactly.
+   Scrolling the list turns the world. The rotation is interpolated between
+   whichever entries are actually on screen, so it stays continuous even when
+   a search has filtered the list down to three of them.
    ======================================================================= */
 const picker=document.getElementById('picker');
 const thresholdEl=document.getElementById('threshold');
+const searchEl=document.getElementById('picker-search');
+const emptyEl=document.getElementById('picker-empty');
 const ITEM_H=44;
 let pickerActive=0, itemEls=[];
+let visible=NODES.map((_,i)=>i);      // node indices currently listed
 
 (function buildPicker(){
   const frag=document.createDocumentFragment();
   NODES.forEach((n,i)=>{
     const d=document.createElement('div');
     d.className='item'; d.textContent=n.label;
-    d.setAttribute('role','option'); d.dataset.i=i;
+    d.setAttribute('role','option'); d.id='opt-'+i; d.dataset.i=i;
     d.addEventListener('click',()=>{
       if(i===pickerActive) enterMap();
-      else scrollToIndex(i);
+      else { const k=visible.indexOf(i); if(k>=0) scrollToSlot(k); }
     });
     frag.appendChild(d); itemEls.push(d);
   });
   picker.insertBefore(frag, picker.lastElementChild);
 })();
 
-function scrollToIndex(i){
-  picker.scrollTo({top:i*ITEM_H, behavior:reduceMotion?'auto':'smooth'});
+function scrollToSlot(k){
+  picker.scrollTo({top:k*ITEM_H, behavior:reduceMotion?'auto':'smooth'});
+}
+function setActive(nodeIdx){
+  if(nodeIdx===pickerActive) return;
+  itemEls[pickerActive]?.classList.remove('active');
+  pickerActive=nodeIdx;
+  itemEls[pickerActive]?.classList.add('active');
+  picker.setAttribute('aria-activedescendant','opt-'+nodeIdx);
+}
+/** shortest signed path from a to b */
+function angDiff(a,b){
+  let d=(b-a)%(Math.PI*2);
+  if(d>Math.PI) d-=Math.PI*2;
+  if(d<-Math.PI) d+=Math.PI*2;
+  return d;
 }
 function onPickerScroll(){
-  const raw=picker.scrollTop/ITEM_H;                 // continuous index
-  const idx=Math.round(raw);
-  if(idx!==pickerActive && idx>=0 && idx<NODES.length){
-    itemEls[pickerActive]?.classList.remove('active');
-    pickerActive=idx;
-    itemEls[pickerActive]?.classList.add('active');
-    picker.setAttribute('aria-activedescendant','opt-'+idx);
-  }
-  // continuous coupling: the world turns as the list moves
-  if(!inMap){ rotTarget=null; rot=frontRotationFor({angle:raw*360/NODES.length}); }
+  if(!visible.length) return;
+  const raw=Math.max(0, Math.min(visible.length-1, picker.scrollTop/ITEM_H));
+  setActive(visible[Math.round(raw)]);
+  if(inMap) return;
+  // Interpolate between the two listed entries either side of the scroll
+  // position, so the world turns smoothly whatever is filtered out.
+  const i0=Math.floor(raw), i1=Math.min(visible.length-1, i0+1), f=raw-i0;
+  const a0=frontRotationFor(NODES[visible[i0]]);
+  const a1=frontRotationFor(NODES[visible[i1]]);
+  rotTarget=null;
+  rot = a0 + angDiff(a0,a1)*f;
 }
 picker.addEventListener('scroll',onPickerScroll,{passive:true});
 picker.addEventListener('keydown',e=>{
-  if(e.key==='ArrowDown'){e.preventDefault();scrollToIndex(Math.min(NODES.length-1,pickerActive+1));}
-  if(e.key==='ArrowUp'){e.preventDefault();scrollToIndex(Math.max(0,pickerActive-1));}
+  const k=visible.indexOf(pickerActive);
+  if(e.key==='ArrowDown'){e.preventDefault();scrollToSlot(Math.min(visible.length-1,k+1));}
+  if(e.key==='ArrowUp'){e.preventDefault();scrollToSlot(Math.max(0,k-1));}
   if(e.key==='Enter'){e.preventDefault();enterMap();}
+});
+
+function applyFilter(){
+  const q=searchEl.value.trim().toLowerCase();
+  visible=[];
+  NODES.forEach((n,i)=>{
+    const hay=(n.label+' '+(ALIASES[n.id]||'')).toLowerCase();
+    const hit=!q || hay.includes(q);
+    itemEls[i].style.display = hit ? '' : 'none';
+    if(hit) visible.push(i);
+  });
+  emptyEl.hidden = visible.length>0;
+  picker.scrollTop=0;
+  if(visible.length) onPickerScroll();
+}
+searchEl.addEventListener('input',applyFilter);
+searchEl.addEventListener('keydown',e=>{
+  if(e.key==='Enter'){ e.preventDefault(); if(visible.length) enterMap(); }
+  if(e.key==='ArrowDown'){ e.preventDefault(); picker.focus(); }
 });
 itemEls[0].classList.add('active');
 
