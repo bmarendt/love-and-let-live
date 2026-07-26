@@ -8,7 +8,7 @@
 <link rel="canonical" href="https://loveandletlive.com/map.html">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <meta property="og:title" content="The Map — Love and Let Live">
-<meta property="og:description" content="Find where you're standing. Seventeen entry points, and a road between each of them.">
+<meta property="og:description" content="Find where you're standing. Eighteen entry points, and a road between each of them.">
 <meta property="og:image" content="https://loveandletlive.com/assets/social-card.jpg">
 <meta property="og:url" content="https://loveandletlive.com/map.html">
 <meta property="og:type" content="website">
@@ -345,42 +345,44 @@
    no verdicts — a listener standing at any of these points should recognise
    themselves and find nothing here arguing with them. */
 const NODES = [
-  { id:'still-asking', label:'Still Asking', r:2.55, core:true,
+  { id:'still-asking', label:'Still Asking', r:1.35, core:true,
     lede:"The position that no person can know with certainty what is ultimately true, and that this is worth saying plainly rather than working around. One conviction is held without qualification: the question stays open this side of death. Everything else is held loosely, and revised when something truer turns up. This is where the host stands." },
-  { id:'christian', label:'Christian', r:1.10,
+  { id:'christian', label:'Christian', r:2.55,
     lede:"Christians hold that God became human in Jesus of Nazareth, who taught, was crucified, and rose from the dead; that his life reveals God's character; and that people are reconciled to God through him. Asked which commandment was greatest, Jesus named two: love God, and love your neighbour as yourself." },
-  { id:'muslim', label:'Muslim', r:2.75,
+  { id:'muslim', label:'Muslim', r:1.35,
     lede:"Muslims hold that God is one, without partner or image, and that Muhammad is the final prophet in a line including Abraham, Moses and Jesus. The Qur'an is received as God's own speech. Practice rests on five pillars: declaration of faith, prayer, almsgiving, fasting in Ramadan, and pilgrimage. Nearly every chapter opens by naming God the Merciful, the Compassionate." },
-  { id:'jewish', label:'Jewish', r:2.35,
+  { id:'jewish', label:'Jewish', r:2.75,
     lede:"Judaism holds that God is one and entered into covenant with Israel, given form in the Torah and worked out across generations of interpretation. Study, questioning and argument are themselves acts of faith. Asked to summarise the whole Torah, Hillel answered: what is hateful to you, do not do to your neighbour — the rest is commentary." },
-  { id:'buddhist', label:'Buddhist', r:2.55,
+  { id:'buddhist', label:'Buddhist', r:2.35,
     lede:"Buddhism begins with four observations: that life contains suffering, that suffering arises from craving and attachment, that it can cease, and that a path leads there. No creator god is required. Practice centres on meditation, ethical conduct, and the deliberate cultivation of compassion for all beings." },
-  { id:'hindu', label:'Hindu', r:1.75,
+  { id:'hindu', label:'Hindu', r:1.35,
     lede:"Hindu traditions hold that a single ultimate reality, Brahman, underlies all things, and that the self participates in it. Action carries consequence across lifetimes until liberation. The divine is approached through many names and forms, and is understood to have taken human form at times to restore righteousness." },
-  { id:'sikh', label:'Sikh', r:2.35,
+  { id:'sikh', label:'Sikh', r:2.15,
     lede:"Sikhs hold that there is one God, without form or image, present in all people, and that every human being is equal regardless of caste, gender or creed. Practice centres on honest work, remembrance of God's name, and sharing with others — expressed in the langar, a free kitchen open to anyone who comes." },
-  { id:'science', label:'Science', r:1.35,
+  { id:'science', label:'Science', r:2.35,
     lede:"The scientific view holds that claims about the world should be tested against evidence, that findings remain provisional and open to revision, and that a claim which cannot in principle be shown wrong is not yet a scientific claim. It makes no assertion of its own about meaning or purpose." },
-  { id:'simulation', label:'The Matrix', r:2.55,
+  { id:'simulation', label:'The Matrix', r:1.1,
     lede:"The view that the reality we perceive may not be the underlying one — framed variously as a simulation, as a model constructed by the brain, or as the older intuition that appearances conceal something truer. It is a claim about the reliability of perception rather than a claim about God." },
 
-  { id:'yoga', label:'Yoga', r:2.35,
+  { id:'yoga', label:'Yoga', r:2.55,
     lede:"Yoga is a discipline from the Indian traditions whose name means union. Classically it has eight limbs — ethical restraints, personal observances, posture, breath regulation, withdrawal of the senses, concentration, meditation and absorption — directed at stilling the movements of the mind." },
-  { id:'chakras', label:'Chakras', r:2.35,
+  { id:'chakras', label:'Chakras', r:1.55,
     lede:"In the tantric and yogic traditions, chakras are centres arranged along the spine through which prana, or life energy, is said to move. Each is associated with particular functions and qualities. Practices of posture, breath and visualisation are used to clear and balance them." },
-  { id:'mantra', label:'Mantra & Chant', r:1.10,
+  { id:'mantra', label:'Mantra & Chant', r:2.75,
     lede:"A mantra is a sound, syllable or phrase repeated aloud or silently. In the Hindu, Buddhist and Sikh traditions, the repetition is held to steady attention and to carry effect through the sound itself, not only through its meaning. Sanskrit and Gurmukhi chant traditions have preserved specific sounds across many centuries." },
-  { id:'energy', label:'Energy Fields', r:2.75,
+  { id:'energy', label:'Energy Fields', r:1.35,
     lede:"The view that living beings generate and exchange subtle fields not fully accounted for by current measurement. Older traditions name this prana, qi, or life force; contemporary research studies related claims under names such as the biofield. Associated practices include reiki, qigong and various forms of hands-on healing." },
 
-  { id:'taoism', label:'Taoism', r:1.55,
+  { id:'taoism', label:'Taoism', r:2.75,
     lede:"Taoism holds that there is a natural order — the Tao — which precedes and exceeds naming, and that life goes best when lived in accordance with it rather than in struggle against it. Its central practice is wu wei, effortless action or non-forcing. The Tao Te Ching opens by saying that the Tao which can be spoken is not the eternal Tao." },
   { id:'indigenous', label:'Indigenous', r:2.75,
     lede:"Indigenous traditions differ profoundly from one another and do not form a single system. Many hold that the sacred is present in land, ancestors and living relationship rather than located in a text; that knowledge is carried through ceremony, story and practice; and that people hold responsibilities to place and to the generations who follow." },
-  { id:'recovery', label:'Recovery', r:2.75,
+  { id:'recovery', label:'Recovery', r:1.1,
     lede:"The twelve-step tradition holds that certain conditions cannot be overcome by will alone, and that recovery begins by admitting this and turning to a higher power — deliberately left for each person to define. The steps proceed through honest inventory, admission of wrongs, making amends, and helping others in turn." },
-  { id:'humanist', label:'Humanist', r:1.35,
+  { id:'humanist', label:'Humanist', r:2.75,
     lede:"Humanism holds that meaning and morality are human responsibilities, arrived at through reason, evidence and compassion, without reference to a deity or an afterlife. Ethical obligation is grounded in the wellbeing of people and other sentient creatures in the life we have." },
+  { id:'atheist', label:'Atheist', r:2.55,
+    lede:"Atheism is the absence of belief in any god. It is an answer to one question rather than a philosophy of life, and atheists differ among themselves about meaning, morality and death as widely as believers do. Some arrive here through evidence, some through suffering, and some by simply never having been persuaded in the first place." },
 ];
 // Even angular spacing, assigned in list order.
 NODES.forEach((n,i)=> n.angle = i*360/NODES.length);
@@ -437,6 +439,14 @@ const ROADS = [
   ['taoism','indigenous',       "Living in accordance with the natural order"],
   ['taoism','christian',        "Strength described through yielding and lowliness"],
   ['recovery','humanist',       "A practice that functions without requiring belief"],
+
+  ['atheist','still-asking',  "Neither will affirm what it has not been shown"],
+  ['atheist','humanist',      "Without a god, the obligation is to each other"],
+  ['atheist','science',       "A claim carries the burden of its own evidence"],
+  ['atheist','buddhist',      "A practice that asks for no creator"],
+  ['atheist','christian',     "The problem of suffering, taken seriously on both sides"],
+  ['atheist','recovery',      "A higher power that need not be a deity"],
+  ['atheist','simulation',    "Doubt that the story explains itself"],
 ];
 
 /* Only what actually exists. Nothing is announced before it's known. */
