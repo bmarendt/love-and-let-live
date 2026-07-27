@@ -130,6 +130,23 @@
     margin-top:18px;padding-top:16px;border-top:1px solid rgba(240,185,77,0.12);
     font-size:12px;color:rgba(139,152,182,0.75);letter-spacing:0.04em;
   }
+  /* when a real embed is present the padding comes from the iframe itself */
+  .player.is-live{padding:0;overflow:hidden;background:transparent;}
+  .player.is-live iframe{display:block;width:100%;border:0;}
+  /* subscribe row — hidden until the links exist */
+  .subs{
+    display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;
+    margin:0 0 24px;font-size:13px;
+  }
+  .subs-label{
+    color:var(--dim);text-transform:uppercase;letter-spacing:0.14em;font-size:11px;
+  }
+  .subs a{
+    color:var(--gold-soft);text-decoration:none;
+    border-bottom:1px solid rgba(240,185,77,0.28);padding-bottom:1px;
+  }
+  .subs a:hover{color:var(--gold);border-bottom-color:var(--gold);}
+  .subs a[hidden]{display:none;}
 
   /* MAP CTA */
   .mapcta{
@@ -215,8 +232,9 @@
         <p style="color:var(--dim);font-size:15px;margin-top:22px;">Which means this show will get things wrong, out loud, on the record. Not as an accident to be apologised for later — as the expected condition of asking questions nobody can answer. When it happens, say so: <a href="mailto:hello@loveandletlive.com">hello@loveandletlive.com</a>. Being corrected is the show working, not the show failing.</p>
       </div>
       <div>
-        <!-- PLAYER SLOT: replace the .ph block below with the embed code from
-             Transistor (or whichever host is chosen). Nothing else changes. -->
+        <!-- PLAYER SLOT — do not edit this markup. Fill in TRANSISTOR at the
+             bottom of the file instead; the real player swaps itself in and this
+             placeholder disappears. Untouched, it degrades to "not yet recorded". -->
         <div class="player" id="player-slot">
           <div class="ph">
             <div class="play-circle">▶</div>
@@ -226,6 +244,13 @@
             </div>
           </div>
           <div class="note">Not yet recorded — the player drops in here once Episode 1 is published.</div>
+        </div>
+        <div class="subs" id="subs" hidden>
+          <span class="subs-label">Also on</span>
+          <a id="sub-apple" href="#" target="_blank" rel="noopener">Apple Podcasts</a>
+          <a id="sub-spotify" href="#" target="_blank" rel="noopener">Spotify</a>
+          <a id="sub-youtube" href="#" target="_blank" rel="noopener">YouTube Music</a>
+          <a id="sub-rss" href="#" target="_blank" rel="noopener">RSS</a>
         </div>
         <p style="color:var(--dim);font-size:15px;">If you're new, this is the only place to begin. Everything else — every conversation, every tradition explored, every hard question asked — gets measured against what's said here first.</p>
       </div>
@@ -299,6 +324,54 @@
 </footer>
 
 <script>
+  /* ------------------------------------------------------------------
+     TRANSISTOR — the only block that needs editing on launch day.
+
+     Fill in episode1 with the id from Transistor (Episode > Share > Embed;
+     the src looks like https://share.transistor.fm/e/abc12345 — you want
+     the "abc12345" part). The player appears the moment it's filled in.
+
+     Leave any subscribe link empty and it simply doesn't render, so you can
+     add Apple/Spotify/YouTube as each directory approves the feed rather
+     than waiting for all of them.
+     ------------------------------------------------------------------ */
+  const TRANSISTOR = {
+    episode1: '',   // Episode 1 embed id — e.g. 'abc12345'
+    apple:    '',   // https://podcasts.apple.com/…
+    spotify:  '',   // https://open.spotify.com/show/…
+    youtube:  '',   // https://music.youtube.com/…
+    rss:      ''    // https://feeds.transistor.fm/…
+  };
+
+  (function(){
+    // Drop the real player in over the placeholder.
+    if (TRANSISTOR.episode1) {
+      var slot = document.getElementById('player-slot');
+      var f = document.createElement('iframe');
+      f.src = 'https://share.transistor.fm/e/' + TRANSISTOR.episode1;
+      f.width = '100%';
+      f.height = '180';
+      f.frameBorder = '0';
+      f.scrolling = 'no';
+      f.loading = 'lazy';
+      f.title = 'Love and Let Live — Episode 1: Terms and Conditions';
+      f.setAttribute('seamless','');
+      slot.innerHTML = '';
+      slot.classList.add('is-live');
+      slot.appendChild(f);
+    }
+
+    // Show the subscribe row only for links that actually exist.
+    var map = { 'sub-apple':'apple', 'sub-spotify':'spotify',
+                'sub-youtube':'youtube', 'sub-rss':'rss' };
+    var any = false;
+    Object.keys(map).forEach(function(id){
+      var el = document.getElementById(id), url = TRANSISTOR[map[id]];
+      if (url) { el.href = url; any = true; } else { el.hidden = true; }
+    });
+    if (any) document.getElementById('subs').hidden = false;
+  })();
+
   // Marks the credo as heard. Wire this to real playback once the episode is
   // live; the map reads this flag when its gate is switched on.
   document.getElementById('enter-map').addEventListener('click', function(){
