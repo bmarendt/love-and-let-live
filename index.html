@@ -325,18 +325,25 @@
 
 <script>
   /* ------------------------------------------------------------------
-     TRANSISTOR — the only block that needs editing on launch day.
+     TRANSISTOR — the config that switches the player on.
 
-     Fill in episode1 with the id from Transistor (Episode > Share > Embed;
-     the src looks like https://share.transistor.fm/e/abc12345 — you want
-     the "abc12345" part). The player appears the moment it's filled in.
+     showId    — the show's embed id. Set this once, before recording, and
+                 launch day needs NO site edit at all: the show player always
+                 renders the latest episode, and at launch that is Episode 1.
+                 Found at Transistor > Show > Share/Embed; the src reads
+                 https://share.transistor.fm/s/abc12345 — you want 'abc12345'.
 
-     Leave any subscribe link empty and it simply doesn't render, so you can
-     add Apple/Spotify/YouTube as each directory approves the feed rather
-     than waiting for all of them.
+     episode1  — optional, and it WINS over showId when set. Use it after
+                 Episode 1 is live to pin this slot to Episode 1 permanently,
+                 so "Start Here" keeps meaning Episode 1 once episode 12 exists.
+                 Same place, but Episode > Share/Embed: .../e/abc12345.
+
+     Subscribe links render only when non-empty, so Apple/Spotify/YouTube can
+     be added one at a time as each directory approves the feed.
      ------------------------------------------------------------------ */
   const TRANSISTOR = {
-    episode1: '',   // Episode 1 embed id — e.g. 'abc12345'
+    showId:   '',   // show embed id — set this now
+    episode1: '',   // episode embed id — set this after launch to pin Ep 1
     apple:    '',   // https://podcasts.apple.com/…
     spotify:  '',   // https://open.spotify.com/show/…
     youtube:  '',   // https://music.youtube.com/…
@@ -344,17 +351,24 @@
   };
 
   (function(){
-    // Drop the real player in over the placeholder.
-    if (TRANSISTOR.episode1) {
+    // Drop the real player in over the placeholder. A pinned episode wins;
+    // otherwise fall back to the show player, which tracks the latest episode.
+    var src = TRANSISTOR.episode1
+      ? 'https://share.transistor.fm/e/' + TRANSISTOR.episode1
+      : (TRANSISTOR.showId ? 'https://share.transistor.fm/s/' + TRANSISTOR.showId : '');
+
+    if (src) {
       var slot = document.getElementById('player-slot');
       var f = document.createElement('iframe');
-      f.src = 'https://share.transistor.fm/e/' + TRANSISTOR.episode1;
+      f.src = src;
       f.width = '100%';
-      f.height = '180';
+      f.height = TRANSISTOR.episode1 ? '180' : '350';
       f.frameBorder = '0';
       f.scrolling = 'no';
       f.loading = 'lazy';
-      f.title = 'Love and Let Live — Episode 1: Terms and Conditions';
+      f.title = TRANSISTOR.episode1
+        ? 'Love and Let Live — Episode 1: Terms and Conditions'
+        : 'Love and Let Live — episode player';
       f.setAttribute('seamless','');
       slot.innerHTML = '';
       slot.classList.add('is-live');
