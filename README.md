@@ -2,7 +2,7 @@
 
 The website for the podcast — [loveandletlive.com](https://loveandletlive.com)
 
-*There's more that brings us together than divides us.*
+*Is there more that brings us together than divides us?*
 
 ## What's here
 
