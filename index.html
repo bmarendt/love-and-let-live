@@ -342,12 +342,17 @@
      be added one at a time as each directory approves the feed.
      ------------------------------------------------------------------ */
   const TRANSISTOR = {
-    showId:   '',   // show embed id — set this now
-    episode1: '',   // episode embed id — set this after launch to pin Ep 1
+    showId:   '',   // show embed id
+    episode1: '',   // ON LAUNCH DAY: put 'f7231c81' here. That is the real
+                    // embed id for Episode 1 "Terms and Conditions", already
+                    // reserved in Transistor. Deliberately left empty until
+                    // the episode is published — the embed is live NOW and
+                    // would render a play button with no audio behind it.
     apple:    '',   // https://podcasts.apple.com/…
     spotify:  '',   // https://open.spotify.com/show/…
     youtube:  '',   // https://music.youtube.com/…
-    rss:      ''    // https://feeds.transistor.fm/…
+    rss:      ''    // https://feeds.transistor.fm/love-and-let-live
+                    // ^ real and working, but empty until Ep 1 publishes
   };
 
   (function(){
