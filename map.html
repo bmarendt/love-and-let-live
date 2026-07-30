@@ -226,6 +226,11 @@
     text-transform:uppercase;transition:background .2s,border-color .2s;
   }
   .req-btn:hover{background:rgba(240,185,77,0.16);border-color:rgba(240,185,77,0.42);}
+  .ask-btn{line-height:1.5;padding-top:15px;padding-bottom:15px;}
+  .ask-btn .ask-sub{
+    display:block;margin-top:6px;font-size:10px;letter-spacing:0.06em;
+    text-transform:none;color:rgba(139,152,182,0.7);font-weight:400;
+  }
   .modal{
     position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;
     background:rgba(3,5,12,0.82);backdrop-filter:blur(7px);padding:26px;
@@ -267,6 +272,23 @@
   .btn-solid:hover{background:var(--gold-soft);}
   .btn-solid:disabled{opacity:.5;cursor:default;}
   .form-msg{margin-top:16px;font-size:13.5px;color:var(--gold-soft);line-height:1.55;}
+  /* The promise. It has to be readable, not buried — someone about to say a
+     hard thing should see it before they type, not after they've sent. */
+  .fine-print{
+    margin-top:4px;padding:15px 17px;border-radius:3px;
+    background:rgba(240,185,77,0.05);border:1px solid rgba(240,185,77,0.12);
+    font-size:12.5px;line-height:1.62;color:rgba(139,152,182,0.92);
+  }
+  .fine-print strong{color:var(--gold-soft);font-weight:500;}
+  /* the closing acknowledgement — the line going dead, gently */
+  .said{text-align:center;padding:14px 0 4px;}
+  .said .mark{font-family:'Cormorant Garamond',serif;font-size:34px;color:var(--gold);opacity:.55;line-height:1;}
+  .said p{
+    font-family:'Cormorant Garamond',serif;font-style:italic;
+    font-size:19px;line-height:1.5;color:var(--gold-soft);margin:14px 0 0;
+  }
+  .said span{display:block;margin-top:14px;font-size:13px;font-style:normal;
+    font-family:'Inter',sans-serif;color:rgba(139,152,182,0.75);}
 
   @media (max-width:720px){
     .panel{width:100%;padding:70px 26px 34px;}
@@ -329,12 +351,15 @@
   <div id="p-eps"></div>
 </aside>
 
-<!-- ============ REQUEST AN EPISODE ============ -->
+<!-- ============ THE UNANSWERED LINE ============
+     A phone that isn't connected. There are deliberately NO name or email
+     fields — see the rules in the script block. Do not add any. -->
 <div class="modal" id="req-modal" hidden role="dialog" aria-modal="true" aria-labelledby="req-h">
   <div class="modal-box">
-    <span class="eyebrow">Request an Episode</span>
-    <h3 id="req-h">What would you like asked?</h3>
-    <p class="intro">Episodes here haven't been made yet, and where this goes next isn't decided. If there's a question you want put to this viewpoint — honestly, and without a conclusion built into it — it can shape what gets recorded.</p>
+    <span class="eyebrow">The Unanswered Line</span>
+    <h3 id="req-h">Ask the thing you've never asked.</h3>
+    <p class="intro">In Ōtsuchi, Japan, there's a phone box in a garden with a disconnected rotary phone in it. People go there to say things to the dead. Nobody is on the other end, and that is the point — it's easier to say something true when nothing is going to answer back.</p>
+    <p class="intro">This is that. If there's a question about this tradition you've never felt able to ask out loud — because of who'd hear it, or because it felt disloyal, or stupid, or too late to be asking — you can put it down here.</p>
     <form id="req-form">
       <div class="field">
         <label for="req-point">The point on the map</label>
@@ -343,19 +368,18 @@
       <div class="field">
         <label for="req-q">Your question</label>
         <textarea id="req-q" name="question" required
-          placeholder="What would you like asked about this viewpoint?"></textarea>
+          placeholder="Say it however it comes out."></textarea>
       </div>
-      <div class="field">
-        <label for="req-name">Name <span class="opt">— optional</span></label>
-        <input id="req-name" name="name" type="text" autocomplete="name">
-      </div>
-      <div class="field">
-        <label for="req-email">Email <span class="opt">— optional, only if you'd like a reply</span></label>
-        <input id="req-email" name="email" type="email" autocomplete="email">
-      </div>
+      <p class="fine-print">
+        <strong>Nothing is coming back.</strong> There's no reply, no promise it becomes
+        an episode, and no way to follow one up. Questions left here are read, and some
+        may be read aloud on the show — never with anything attached to them, because
+        there's nothing to attach. No name, no email, no account. I have no way of
+        knowing who you are, and I'd rather keep it that way.
+      </p>
       <div class="modal-actions">
-        <button type="button" class="btn-ghost" id="req-cancel">Cancel</button>
-        <button type="submit" class="btn-solid" id="req-send">Send Request</button>
+        <button type="button" class="btn-ghost" id="req-cancel">Never mind</button>
+        <button type="submit" class="btn-solid" id="req-send">Say It</button>
       </div>
       <div class="form-msg" id="req-msg" hidden></div>
     </form>
@@ -490,22 +514,42 @@ const ROADS = [
 /* Only what actually exists. Nothing is announced before it's known. */
 const EPISODES = {
   'still-asking':[
-    {n:'01', t:'Terms and Conditions', s:'Ground rules, and the two questions. No refunds.', status:'Next Up', href:'index.html#start'},
-    {n:'02', t:'The Most Important Meal of the Day', s:'One Tuesday, two kids, and no revelations', status:'Coming'},
+    {n:'01', t:'Terms and Conditions', s:'Ground rules, and the two questions. No refunds.', status:'In Production', href:'index.html#coming'},
+    {n:'02', t:'The Most Important Meal of the Day', s:'One Tuesday, two kids, and no revelations', status:'In Production'},
   ],
 };
 
 /* -----------------------------------------------------------------------
-   EPISODE REQUESTS
-   Live, currently composing an email to REQUEST_MAILTO. That address is a
-   forward-only show address, so publishing it here is cheap to undo.
-   To upgrade: paste a form endpoint (Formspree, Tally, Formspark) into
-   REQUEST_ENDPOINT and requests POST there instead — structured, spam-filtered,
-   and no mail client involved. The mailto stays as the fallback.
+   THE UNANSWERED LINE
+   ---------------------------------------------------------------------
+   Episode requests are OFF. The first several episodes are background and
+   map set-up, so a request arriving now could not be honoured for months —
+   and an unanswerable request is worse than never asking.
+
+   In its place: a phone that isn't connected. Somewhere to put the question
+   you've never felt able to ask about a tradition, with no reply offered and
+   nothing about you recorded. Modelled on Itaru Sasaki's wind phone.
+
+   RULES, and they are not negotiable:
+
+   1. NO MAILTO FALLBACK. A mailto opens the visitor's own mail client and
+      attaches their name and address — the precise opposite of what is
+      promised on the form. There is no degraded mode here. If
+      QUESTION_ENDPOINT is empty the whole feature stays hidden.
+   2. NO NAME OR EMAIL FIELD, ever. The privacy line on the form is only
+      true because the fields do not exist. Adding one makes the site lie.
+   3. The form says questions may be read on the show. Keep that visible.
+      People answer honestly here; using it later without having said so is
+      the one way this turns sour.
+
+   To switch on: create a form endpoint that accepts a JSON POST — Formspree,
+   Tally and Formspark all do on a free plan — and paste the URL below. Turn
+   OFF any auto-reply / "notify the sender" option in that service; there is
+   no address to reply to, and the promise is that nobody writes back.
    ----------------------------------------------------------------------- */
-const REQUESTS_ENABLED = true;
-const REQUEST_ENDPOINT = '';                        // set this to switch to a form service
-const REQUEST_MAILTO   = 'hello@loveandletlive.com';
+const REQUESTS_ENABLED  = false;   // episode requests — leave off until ~Ep 5
+const ASK_ENABLED       = true;    // the unanswered line
+const QUESTION_ENDPOINT = '';      // paste the form endpoint; empty = hidden
 
 /* =======================================================================
    VIEW STATES
@@ -1125,6 +1169,18 @@ function selectNode(id,fromEntry){
     eWrap.appendChild(rb);
   }
 
+  /* The unanswered line. Hidden entirely unless there's somewhere for the
+     question to land — a button that promises to receive something and then
+     quietly drops it is the worst possible version of this idea. */
+  if(ASK_ENABLED && QUESTION_ENDPOINT){
+    const ab=document.createElement('button');
+    ab.className='req-btn ask-btn';
+    ab.innerHTML='Ask the thing you’ve never asked'+
+                 '<span class="ask-sub">No reply. Nothing recorded about you.</span>';
+    ab.addEventListener('click',()=>openRequest(id));
+    eWrap.appendChild(ab);
+  }
+
   panel.classList.add('open');
   panel.scrollTop=0;
 }
@@ -1166,50 +1222,46 @@ reqModal.addEventListener('click',e=>{ if(e.target===reqModal) closeRequest(); }
 
 reqForm.addEventListener('submit',async e=>{
   e.preventDefault();
+
+  /* The payload is the question and the marker it was asked from. Nothing
+     else. No name, no email, and deliberately NOT location.href or a
+     referrer or a timestamp finer than the day — a question plus an exact
+     moment plus a page is enough to re-identify someone who told you they
+     were the only Sikh in a small town. If you ever add a field here, ask
+     first whether it could be used to work out who wrote it. */
   const data={
     entry_point: reqPoint.value,
     question:    document.getElementById('req-q').value.trim(),
-    name:        document.getElementById('req-name').value.trim(),
-    email:       document.getElementById('req-email').value.trim(),
-    page:        location.href,
+    day:         new Date().toISOString().slice(0,10),
   };
   if(!data.question) return;
+
   const send=document.getElementById('req-send');
   send.disabled=true;
   reqMsg.hidden=false;
-  reqMsg.textContent='Sending…';
+  reqMsg.textContent='…';
 
   try{
-    if(REQUEST_ENDPOINT){
-      const res=await fetch(REQUEST_ENDPOINT,{
-        method:'POST',
-        headers:{'Content-Type':'application/json','Accept':'application/json'},
-        body:JSON.stringify(data),
-      });
-      if(!res.ok) throw new Error('HTTP '+res.status);
-      reqMsg.textContent='Thank you — your question has been received.';
-      reqForm.reset();
-      setTimeout(closeRequest,2200);
-    } else if(REQUEST_MAILTO){
-      const body=
-        'Point on the map: '+data.entry_point+'\n\n'+
-        'Question:\n'+data.question+'\n\n'+
-        (data.name?'Name: '+data.name+'\n':'')+
-        (data.email?'Email: '+data.email+'\n':'');
-      location.href='mailto:'+REQUEST_MAILTO+
-        '?subject='+encodeURIComponent('Episode request — '+data.entry_point)+
-        '&body='+encodeURIComponent(body);
-      // If no mail handler is registered nothing visibly happens, so always
-      // leave the address on screen to copy.
-      reqMsg.innerHTML='Opening your email app… if nothing happens, send it to '+
-        '<a href="mailto:'+REQUEST_MAILTO+'" style="color:#ffd88a">'+REQUEST_MAILTO+'</a>';
-      send.disabled=false;
-    } else {
-      throw new Error('No destination configured');
-    }
+    if(!QUESTION_ENDPOINT) throw new Error('No destination configured');
+
+    const res=await fetch(QUESTION_ENDPOINT,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body:JSON.stringify(data),
+    });
+    if(!res.ok) throw new Error('HTTP '+res.status);
+
+    /* Don't say "thank you" and don't say "received" — both imply someone
+       on the other end. The line goes quiet instead. */
+    reqForm.reset();
+    reqMsg.innerHTML=
+      '<div class="said"><div class="mark">·</div>'+
+      '<p>It’s been said out loud.<br>That was the whole point of it.</p>'+
+      '<span>Nothing is coming back. You can close this.</span></div>';
   }catch(err){
     send.disabled=false;
-    reqMsg.textContent='That didn’t send. Requests aren’t connected yet — please try again later.';
+    reqMsg.textContent='That didn’t go through — nothing was saved. '+
+                       'The line isn’t connected yet. Try again another day.';
   }
 });
 
