@@ -379,7 +379,7 @@
       <button type="submit" id="notify-send">Tell Me</button>
     </form>
     <div class="notify-msg" id="notify-msg" hidden></div>
-    <p class="notify-fine">Your address is used for that one email and nothing else. Unsubscribe in a click, and it's never passed on to anyone.</p>
+    <p class="notify-fine">There's one confirmation email straight away — click the link in it, or you're not actually on the list. After that, silence until Episode 1. Unsubscribe in a click, and your address is never passed on to anyone.</p>
   </div>
 </section>
 
@@ -448,9 +448,13 @@
      that actually matters.
      ------------------------------------------------------------------ */
   const NOTIFY = {
-    endpoint: '',                          // paste the form action URL here
-    field:    'email',                     // Buttondown uses 'email'; Kit uses 'email_address'
-    mailto:   'hello@loveandletlive.com'   // fallback, always works
+    // Kit form "Site — Notify on Episode 1" (form id 9745133), created 2026-07-30.
+    // Double opt-in is ON in Kit, so a subscriber isn't real until they click
+    // the confirmation email — which is why the message below says to go and
+    // check for it rather than declaring them subscribed.
+    endpoint: 'https://app.kit.com/forms/9745133/subscriptions',
+    field:    'email_address',             // Kit's field name; Buttondown uses 'email'
+    mailto:   'hello@loveandletlive.com'   // fallback if the endpoint is ever cleared
   };
 
   (function(){
@@ -511,18 +515,38 @@
       }
 
       send.disabled = true;
-      var body = new FormData();
-      body.append(NOTIFY.field, addr);
+      say('…');
 
-      fetch(NOTIFY.endpoint, { method:'POST', body:body, mode:'no-cors' })
-        .then(function(){
-          form.reset();
-          say("You're on the list. One email, when there's something to hear.");
-        })
-        .catch(function(){
-          say('That didn’t go through. Email ' + NOTIFY.mailto + ' and you’ll be added by hand.');
-        })
-        .finally(function(){ send.disabled = false; });
+      /* Kit's endpoint speaks JSON and sends CORS headers, so try that first —
+         it's the only version where a real failure is visible to the visitor.
+         If the browser blocks it, fall back to an opaque no-cors form post,
+         which almost always lands but can't be read. Never claim success in
+         the fallback path beyond "check your email", because the confirmation
+         mail is what actually tells them it worked. */
+      var done = function(){
+        form.reset();
+        say('Now check your email and click the confirmation link — you’re not on the list until you do.');
+      };
+
+      fetch(NOTIFY.endpoint, {
+        method:'POST',
+        headers:{'Content-Type':'application/json','Accept':'application/json'},
+        body: JSON.stringify({ email_address: addr })
+      })
+      .then(function(res){
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        done();
+      })
+      .catch(function(){
+        var body = new FormData();
+        body.append(NOTIFY.field, addr);
+        return fetch(NOTIFY.endpoint, { method:'POST', body:body, mode:'no-cors' })
+          .then(done)
+          .catch(function(){
+            say('That didn’t go through. Email ' + NOTIFY.mailto + ' and you’ll be added by hand.');
+          });
+      })
+      .finally(function(){ send.disabled = false; });
     });
 
     /* Marks the credo as seen. The map's gate reads this flag when it's
