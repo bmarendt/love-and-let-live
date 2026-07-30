@@ -280,6 +280,10 @@
     font-size:12.5px;line-height:1.62;color:rgba(139,152,182,0.92);
   }
   .fine-print strong{color:var(--gold-soft);font-weight:500;}
+  /* Tally iframe. It renders on a transparent background so the dark panel
+     shows through; the only thing it draws is the textarea and the button. */
+  .ask-frame{margin-top:20px;min-height:230px;}
+  .ask-frame iframe{display:block;width:100%;min-height:230px;border:0;background:transparent;}
   /* the closing acknowledgement — the line going dead, gently */
   .said{text-align:center;padding:14px 0 4px;}
   .said .mark{font-family:'Cormorant Garamond',serif;font-size:34px;color:var(--gold);opacity:.55;line-height:1;}
@@ -360,29 +364,27 @@
     <h3 id="req-h">Ask the thing you've never asked.</h3>
     <p class="intro">In Ōtsuchi, Japan, there's a phone box in a garden with a disconnected rotary phone in it. People go there to say things to the dead. Nobody is on the other end, and that is the point — it's easier to say something true when nothing is going to answer back.</p>
     <p class="intro">This is that. If there's a question about this tradition you've never felt able to ask out loud — because of who'd hear it, or because it felt disloyal, or stupid, or too late to be asking — you can put it down here.</p>
-    <form id="req-form">
-      <div class="field">
-        <label for="req-point">The point on the map</label>
-        <select id="req-point" name="entry_point"></select>
-      </div>
-      <div class="field">
-        <label for="req-q">Your question</label>
-        <textarea id="req-q" name="question" required
-          placeholder="Say it however it comes out."></textarea>
-      </div>
-      <p class="fine-print">
-        <strong>Nothing is coming back.</strong> There's no reply, no promise it becomes
-        an episode, and no way to follow one up. Questions left here are read, and some
-        may be read aloud on the show — never with anything attached to them, because
-        there's nothing to attach. No name, no email, no account. I have no way of
-        knowing who you are, and I'd rather keep it that way.
-      </p>
-      <div class="modal-actions">
-        <button type="button" class="btn-ghost" id="req-cancel">Never mind</button>
-        <button type="submit" class="btn-solid" id="req-send">Say It</button>
-      </div>
-      <div class="form-msg" id="req-msg" hidden></div>
-    </form>
+
+    <p class="fine-print">
+      <strong>Nothing is coming back.</strong> There's no reply, no promise it becomes
+      an episode, and no way to follow one up. Questions left here are read, and some
+      may be read aloud on the show — never with anything attached to them, because
+      there's nothing to attach. No name, no email, no account. I have no way of
+      knowing who you are, and I'd rather keep it that way.
+    </p>
+
+    <!-- The field itself is a Tally form, loaded transparent so it inherits the
+         panel around it. The marker you asked from rides in on the query string
+         as a hidden field; nothing else is sent. src is set at open time and
+         CLEARED on close, so a half-typed question never survives the modal. -->
+    <div class="ask-frame" id="ask-frame">
+      <iframe id="ask-iframe" title="Leave a question" loading="lazy"
+              src="" frameborder="0" marginheight="0" marginwidth="0"></iframe>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn-ghost" id="req-cancel">Never mind</button>
+    </div>
   </div>
 </div>
 
@@ -530,26 +532,32 @@ const EPISODES = {
    you've never felt able to ask about a tradition, with no reply offered and
    nothing about you recorded. Modelled on Itaru Sasaki's wind phone.
 
+   The field is a Tally form (id below) embedded transparent inside our own
+   panel, so the framing above stays ours and Tally only draws the textarea
+   and the button. Submissions land in the Notion database "The Unanswered
+   Line — Questions". The marker the visitor asked from is passed as the
+   `entry_point` URL parameter into a hidden field of the same name — Tally
+   hidden fields are CASE-SENSITIVE and must match exactly.
+
    RULES, and they are not negotiable:
 
-   1. NO MAILTO FALLBACK. A mailto opens the visitor's own mail client and
-      attaches their name and address — the precise opposite of what is
-      promised on the form. There is no degraded mode here. If
-      QUESTION_ENDPOINT is empty the whole feature stays hidden.
-   2. NO NAME OR EMAIL FIELD, ever. The privacy line on the form is only
-      true because the fields do not exist. Adding one makes the site lie.
-   3. The form says questions may be read on the show. Keep that visible.
-      People answer honestly here; using it later without having said so is
-      the one way this turns sour.
-
-   To switch on: create a form endpoint that accepts a JSON POST — Formspree,
-   Tally and Formspark all do on a free plan — and paste the URL below. Turn
-   OFF any auto-reply / "notify the sender" option in that service; there is
-   no address to reply to, and the promise is that nobody writes back.
+   1. NO MAILTO, EVER. A mailto opens the visitor's own mail client and
+      attaches their name and address — the precise opposite of what the
+      panel promises. There is no degraded mode. If TALLY_FORM_ID is empty
+      the whole feature stays hidden.
+   2. NO NAME OR EMAIL FIELD, ever, in the Tally form or here. The privacy
+      line is only true because the fields do not exist. Adding one makes
+      the site lie to someone in a soft moment.
+   3. The panel says questions may be read on the show. Keep it visible.
+   4. In Tally: "Save answers for later" must stay OFF. It parks unsubmitted
+      answers in the visitor's own browser storage, where anyone sharing the
+      device could find a half-written question. Switched off 2026-07-30.
+   5. Never switch on "Prevent duplicate submissions" — it identifies people
+      by IP, which is exactly what we promised not to hold.
    ----------------------------------------------------------------------- */
-const REQUESTS_ENABLED  = false;   // episode requests — leave off until ~Ep 5
-const ASK_ENABLED       = true;    // the unanswered line
-const QUESTION_ENDPOINT = '';      // paste the form endpoint; empty = hidden
+const REQUESTS_ENABLED = false;      // episode requests — leave off until ~Ep 5
+const ASK_ENABLED      = true;       // the unanswered line
+const TALLY_FORM_ID    = 'KYAyDz';   // tally.so/r/KYAyDz — empty = hidden
 
 /* =======================================================================
    VIEW STATES
@@ -1172,7 +1180,7 @@ function selectNode(id,fromEntry){
   /* The unanswered line. Hidden entirely unless there's somewhere for the
      question to land — a button that promises to receive something and then
      quietly drops it is the worst possible version of this idea. */
-  if(ASK_ENABLED && QUESTION_ENDPOINT){
+  if(ASK_ENABLED && TALLY_FORM_ID){
     const ab=document.createElement('button');
     ab.className='req-btn ask-btn';
     ab.innerHTML='Ask the thing you’ve never asked'+
@@ -1191,78 +1199,50 @@ function deselect(){
 document.getElementById('close').addEventListener('click',deselect);
 
 /* =======================================================================
-   REQUEST MODAL
+   THE UNANSWERED LINE — modal
+   The panel is ours; the field inside it is Tally. We pass only the marker
+   label, and we tear the iframe down on close so nothing typed and then
+   abandoned stays in memory or in the page.
    ======================================================================= */
-const reqModal=document.getElementById('req-modal');
-const reqForm=document.getElementById('req-form');
-const reqPoint=document.getElementById('req-point');
-const reqMsg=document.getElementById('req-msg');
+const reqModal =document.getElementById('req-modal');
+const askFrame =document.getElementById('ask-iframe');
 let lastFocus=null;
 
-NODES.forEach(n=>{
-  const o=document.createElement('option');
-  o.value=n.label; o.textContent=n.label;
-  reqPoint.appendChild(o);
-});
+function askURL(id){
+  const label=(byId[id]||{}).label||'Other';
+  /* hideTitle — the panel already has a heading of its own
+     transparentBackground — let the dark panel show through
+     dynamicHeight — Tally posts its height so the box doesn't scroll
+     entry_point — matches the CASE-SENSITIVE hidden field in the form */
+  return 'https://tally.so/embed/'+TALLY_FORM_ID
+       + '?hideTitle=1&transparentBackground=1&dynamicHeight=1'
+       + '&entry_point='+encodeURIComponent(label);
+}
 
 function openRequest(id){
+  if(!TALLY_FORM_ID) return;
   lastFocus=document.activeElement;
-  reqPoint.value=(byId[id]||{}).label||NODES[0].label;
-  reqMsg.hidden=true; reqMsg.textContent='';
-  document.getElementById('req-send').disabled=false;
+  askFrame.src=askURL(id);
   reqModal.hidden=false;
-  document.getElementById('req-q').focus();
 }
 function closeRequest(){
   reqModal.hidden=true;
+  askFrame.src='';            // discard anything half-written
   if(lastFocus) lastFocus.focus();
 }
 document.getElementById('req-cancel').addEventListener('click',closeRequest);
 reqModal.addEventListener('click',e=>{ if(e.target===reqModal) closeRequest(); });
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape' && !reqModal.hidden) closeRequest();
+});
 
-reqForm.addEventListener('submit',async e=>{
-  e.preventDefault();
-
-  /* The payload is the question and the marker it was asked from. Nothing
-     else. No name, no email, and deliberately NOT location.href or a
-     referrer or a timestamp finer than the day — a question plus an exact
-     moment plus a page is enough to re-identify someone who told you they
-     were the only Sikh in a small town. If you ever add a field here, ask
-     first whether it could be used to work out who wrote it. */
-  const data={
-    entry_point: reqPoint.value,
-    question:    document.getElementById('req-q').value.trim(),
-    day:         new Date().toISOString().slice(0,10),
-  };
-  if(!data.question) return;
-
-  const send=document.getElementById('req-send');
-  send.disabled=true;
-  reqMsg.hidden=false;
-  reqMsg.textContent='…';
-
-  try{
-    if(!QUESTION_ENDPOINT) throw new Error('No destination configured');
-
-    const res=await fetch(QUESTION_ENDPOINT,{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Accept':'application/json'},
-      body:JSON.stringify(data),
-    });
-    if(!res.ok) throw new Error('HTTP '+res.status);
-
-    /* Don't say "thank you" and don't say "received" — both imply someone
-       on the other end. The line goes quiet instead. */
-    reqForm.reset();
-    reqMsg.innerHTML=
-      '<div class="said"><div class="mark">·</div>'+
-      '<p>It’s been said out loud.<br>That was the whole point of it.</p>'+
-      '<span>Nothing is coming back. You can close this.</span></div>';
-  }catch(err){
-    send.disabled=false;
-    reqMsg.textContent='That didn’t go through — nothing was saved. '+
-                       'The line isn’t connected yet. Try again another day.';
-  }
+/* Tally reports its rendered height so the iframe can grow with the answer
+   instead of showing an inner scrollbar. Ignore anything from anywhere else. */
+window.addEventListener('message',e=>{
+  if(typeof e.origin!=='string' || e.origin.indexOf('https://tally.so')!==0) return;
+  let d=e.data;
+  if(typeof d==='string'){ try{ d=JSON.parse(d); }catch(err){ return; } }
+  if(d && d.includesHeight && d.height) askFrame.style.height=d.height+'px';
 });
 
 /* =======================================================================
