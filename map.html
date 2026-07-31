@@ -956,16 +956,12 @@ function drawNodes(time){
       ctx.fillStyle=isSel?'#fff6e0':(isHov?'#ffd88a':'rgba(240,243,250,0.94)');
       for(let k=0;k<Q.shadowPasses;k++) ctx.fillText(n.label,p.x,ly);
       ctx.restore();
-      if(n.core && !dim && inMap){
-        const fs2=Math.max(8,fs*0.40);
-        ctx.globalAlpha=alpha*0.85;
-        ctx.font=`500 ${fs2}px Inter, sans-serif`;
-        ctx.save();
-        ctx.shadowColor='rgba(2,4,10,0.95)'; ctx.shadowBlur=8;
-        ctx.fillStyle='rgba(240,185,77,0.95)';
-        ctx.fillText('YOU ARE HERE',p.x,ly-fs*1.05);
-        ctx.restore();
-      }
+      /* No "YOU ARE HERE" marker. It used to sit over Still Asking, but it
+         never moved with the visitor, so it read as the map telling everyone
+         they stand where the host stands. The whole premise is that there is
+         no centre and no wrong starting point — a fixed label pinning the
+         viewer to one marker contradicts that. Where the host stands is said
+         in the panel instead, where it's clearly the host speaking. */
     }
     ctx.globalAlpha=1;
     hitboxes.push({id:n.id,x:p.x,y:(p.y+top)/2,r:Math.max(22,ph*0.85)});
@@ -1157,7 +1153,9 @@ function selectNode(id,fromEntry){
   if(!eps.length){
     const e=document.createElement('div');
     e.className='empty';
-    e.textContent='Nothing recorded here yet. Where the show goes after the first two episodes hasn’t been decided.';
+    /* "a few" not "two" — the opening run is mapped out well past episode 2,
+       and saying two makes it sound like the plan runs out immediately. */
+    e.textContent='Nothing recorded here yet. The first few episodes lay the groundwork; where the show goes after them isn’t decided.';
     eWrap.appendChild(e);
   } else eps.forEach(ep=>{
     const d=document.createElement('div');
